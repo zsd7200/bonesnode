@@ -617,6 +617,12 @@ window.onload = function () {
     dieArray.push(diceContainer.children[i]);
     setupDie(dieArray[i]);
   }
+  /* MARK: - CORS Bypass for Audio - */
+
+
+  for (var _i7 = 0; _i7 < rollSounds.length; _i7++) {
+    rollSounds[_i7].crossOrigin = "anonymous";
+  }
   /* MARK: - Dark Mode - */
 
 
@@ -626,18 +632,18 @@ window.onload = function () {
         selected = [],
         prevSelected = [];
 
-    for (var _i7 = 0; _i7 < dieArray.length; _i7++) {
-      switch (dieArray[_i7].style.backgroundColor) {
+    for (var _i8 = 0; _i8 < dieArray.length; _i8++) {
+      switch (dieArray[_i8].style.backgroundColor) {
         case previouslySelectedColor:
-          prevSelected.push(_i7);
+          prevSelected.push(_i8);
           break;
 
         case selectedColor:
-          selected.push(_i7);
+          selected.push(_i8);
           break;
 
         case bgColor:
-          unselected.push(_i7);
+          unselected.push(_i8);
           break;
 
         default:
@@ -661,56 +667,56 @@ window.onload = function () {
 
     localButton.classList.toggle("dark-button"); // redraw dice
 
-    for (var _i8 = 0; _i8 < unselected.length; _i8++) {
-      dieArray[unselected[_i8]].style.backgroundColor = bgColor;
+    for (var _i9 = 0; _i9 < unselected.length; _i9++) {
+      dieArray[unselected[_i9]].style.backgroundColor = bgColor;
     }
 
-    for (var _i9 = 0; _i9 < selected.length; _i9++) {
-      dieArray[selected[_i9]].style.backgroundColor = selectedColor;
+    for (var _i10 = 0; _i10 < selected.length; _i10++) {
+      dieArray[selected[_i10]].style.backgroundColor = selectedColor;
     }
 
-    for (var _i10 = 0; _i10 < prevSelected.length; _i10++) {
-      dieArray[prevSelected[_i10]].style.backgroundColor = previouslySelectedColor;
+    for (var _i11 = 0; _i11 < prevSelected.length; _i11++) {
+      dieArray[prevSelected[_i11]].style.backgroundColor = previouslySelectedColor;
     } // toggle body's dark mode
 
 
     document.body.classList.toggle("dark-body"); // update scoreboard for dark mode
 
-    for (var _i11 = 0; _i11 < scoreboardTrs.length; _i11++) {
-      if (!(_i11 % 2)) {
-        scoreboardTrs[_i11].style.backgroundColor = darkMode ? trBgD : trBgL;
+    for (var _i12 = 0; _i12 < scoreboardTrs.length; _i12++) {
+      if (!(_i12 % 2)) {
+        scoreboardTrs[_i12].style.backgroundColor = darkMode ? trBgD : trBgL;
       }
 
       showCurrPlayer(currPlayer);
     } // handle toggling dark dice and changing their src images
 
 
-    for (var _i12 = 0; _i12 < dieArray.length; _i12++) {
-      dieArray[_i12].classList.toggle("dark-die");
+    for (var _i13 = 0; _i13 < dieArray.length; _i13++) {
+      dieArray[_i13].classList.toggle("dark-die");
 
-      switch (dieArray[_i12].title) {
+      switch (dieArray[_i13].title) {
         case "one":
-          dieArray[_i12].src = darkMode ? diceSrcD[0] : diceSrcL[0];
+          dieArray[_i13].src = darkMode ? diceSrcD[0] : diceSrcL[0];
           break;
 
         case "two":
-          dieArray[_i12].src = darkMode ? diceSrcD[1] : diceSrcL[1];
+          dieArray[_i13].src = darkMode ? diceSrcD[1] : diceSrcL[1];
           break;
 
         case "three":
-          dieArray[_i12].src = darkMode ? diceSrcD[2] : diceSrcL[2];
+          dieArray[_i13].src = darkMode ? diceSrcD[2] : diceSrcL[2];
           break;
 
         case "four":
-          dieArray[_i12].src = darkMode ? diceSrcD[3] : diceSrcL[3];
+          dieArray[_i13].src = darkMode ? diceSrcD[3] : diceSrcL[3];
           break;
 
         case "five":
-          dieArray[_i12].src = darkMode ? diceSrcD[4] : diceSrcL[4];
+          dieArray[_i13].src = darkMode ? diceSrcD[4] : diceSrcL[4];
           break;
 
         case "six":
-          dieArray[_i12].src = darkMode ? diceSrcD[5] : diceSrcL[5];
+          dieArray[_i13].src = darkMode ? diceSrcD[5] : diceSrcL[5];
           break;
       }
     } // swap between unicode moons
@@ -750,11 +756,11 @@ window.onload = function () {
     } // create new children
 
 
-    for (var _i13 = 0; _i13 < localPlayers.value; _i13++) {
+    for (var _i14 = 0; _i14 < localPlayers.value; _i14++) {
       var label = document.createElement("label");
       var input = document.createElement("input");
       var br = document.createElement("br");
-      var name = "nick" + _i13; // fill out data
+      var name = "nick" + _i14; // fill out data
 
       label.htmlFor = name;
       label.innerHTML = name + ": ";
@@ -775,14 +781,14 @@ window.onload = function () {
 
     if (localPlayers.value != 0) {
       // check for invalid input
-      for (var _i14 = 0; _i14 < nicknames.children.length; _i14++) {
-        if (nicknames.children[_i14].type == "text") {
-          if (nicknames.children[_i14].value == "") {
+      for (var _i15 = 0; _i15 < nicknames.children.length; _i15++) {
+        if (nicknames.children[_i15].type == "text") {
+          if (nicknames.children[_i15].value == "") {
             invalidInput = true;
           }
 
           for (var j = 0; j < nicknames.children.length; j++) {
-            if (_i14 != j && nicknames.children[_i14].value == nicknames.children[j].value) invalidInput = true;
+            if (_i15 != j && nicknames.children[_i15].value == nicknames.children[j].value) invalidInput = true;
           }
         }
       } // check for invalid name input
@@ -791,26 +797,26 @@ window.onload = function () {
       if (invalidInput) {
         errDisp("Invalid name input!");
       } else {
-        for (var _i15 = 0; _i15 < nicknames.children.length; _i15++) {
-          if (nicknames.children[_i15].type == "text") {
-            playerNames.push(nicknames.children[_i15].value);
+        for (var _i16 = 0; _i16 < nicknames.children.length; _i16++) {
+          if (nicknames.children[_i16].type == "text") {
+            playerNames.push(nicknames.children[_i16].value);
             scores.push(0);
           }
         } // create elements to be appended to the scoreboard element
 
 
-        for (var _i16 = 0; _i16 < playerNames.length; _i16++) {
+        for (var _i17 = 0; _i17 < playerNames.length; _i17++) {
           var tr = document.createElement("tr");
           var name = document.createElement("td");
           var score = document.createElement("td");
-          tr.id = "player" + _i16;
-          if (!(_i16 % 2)) tr.style.backgroundColor = trBgL;
-          name.innerHTML = playerNames[_i16];
-          score.innerHTML = scores[_i16];
+          tr.id = "player" + _i17;
+          if (!(_i17 % 2)) tr.style.backgroundColor = trBgL;
+          name.innerHTML = playerNames[_i17];
+          score.innerHTML = scores[_i17];
           tr.appendChild(name);
           tr.appendChild(score);
           scoreboard.children[0].appendChild(tr);
-          scoreboardTrs.push(document.querySelector("#player" + _i16));
+          scoreboardTrs.push(document.querySelector("#player" + _i17));
         }
 
         showCurrPlayer(); // fade out landing and fade in gamecontainer and scoreboard

@@ -3,6 +3,7 @@
 - Better name validation/checking
 - Onboarding/rules somewhere on the site
 - Nicer-looking landing page
+- Better mobile/small screen layout
 - Networking
 - Misc. QOL stuff
 - Other bugfixes

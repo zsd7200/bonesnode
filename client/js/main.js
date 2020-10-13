@@ -30,6 +30,11 @@ window.onload = () => {
         setupDie(dieArray[i]);
     }
     
+    /* MARK: - CORS Bypass for Audio - */
+    for(let i = 0; i < rollSounds.length; i++) {
+        rollSounds[i].crossOrigin = "anonymous";
+    }
+    
     /* MARK: - Dark Mode - */
     darkModeToggle.onclick = () => {
         // store colors to redraw after swapping modes
