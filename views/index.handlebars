@@ -1,0 +1,70 @@
+<div id="content">
+    <div id="left-column">
+        <p id="error"> </p>
+        
+        <div id="landing">
+            <h1>Bones</h1>
+            
+            <label for="local-players">Local Players: </label>
+            <input type="number" id="local-players" name="local-players" value=0 min=0 max=10><br><br>
+            
+            <div id="local-nicks"></div>
+            
+            <br>
+            
+            <!--
+            <div id="room-buttons">
+                <button id="join-room-button">Join Game</button>
+                <button id="host-room-button">Host Game</button>
+            </div>
+            
+            <div id="join-options">
+                <label for="id">Room ID: </label>
+                <input type="text" id="id" name="id" placeholder="Room ID"><br>
+                <button id="join-button">Join Game</buttom>
+            </div>
+            
+            <div id="host-options">
+                <label for="max">Max Players: </label>
+                <input type="number" id="max" name="max" value=2 min=1 max=10><br>
+                <button id="host-button">Host Game</button>
+            </div>
+            -->
+            
+            <button id="local-play">Start Local Game</button>
+        </div>
+
+        <div id="game">   
+            <div id="dice-container">
+                <img id="die-1" class="die" src="assets/img/dice/l/1.webp" alt="one" />
+                <img id="die-2" class="die" src="assets/img/dice/l/2.webp" alt="two" />
+                <img id="die-3" class="die" src="assets/img/dice/l/3.webp" alt="three" />
+                <img id="die-4" class="die" src="assets/img/dice/l/4.webp" alt="four" />
+                <img id="die-5" class="die" src="assets/img/dice/l/5.webp" alt="five" />
+                <img id="die-6" class="die" src="assets/img/dice/l/6.webp" alt="six" />
+            </div>
+            
+            <div id="game-button-container">
+                <button id="roll-button">Roll</button>
+                <button id="end-turn-button">End Turn</button>
+                <button id="restart-button">Restart Game</button>
+            </div>
+            
+            <div id="roll-info">
+                <p>Current Roll: <span id="curr-roll">0</span></p>
+            </div>
+        </div>
+    </div>
+    
+    <div id="right-column">
+        <table id="scoreboard">
+            <tr>
+                <th>Player</th>
+                <th>Score</th>
+            </tr>
+        </table>
+    </div>
+    
+    <button id="dark-mode-toggle">🌚</button>
+    <button id="sound-toggle">🔈</button>
+</div>

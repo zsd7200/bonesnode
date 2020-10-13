@@ -1,0 +1,137 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background-color: white;
+    color: black;
+    transition: .5s;
+    overflow-x: hidden;
+}
+
+/* MARK: - Table/Scoreboard - */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    overflow: hidden;
+}
+
+td, th {
+    border: 1px solid rgb(221, 221, 221);
+    text-align: left;
+    padding: 8px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    width: 10%;
+}
+
+/* MARK: - Main content organization - */
+#content {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+#left-column {
+    width: 60%;
+}
+
+#right-column {
+    width: 30%;
+    padding-top: 10px;
+    padding-right: 30px;
+}
+
+/* MARK: - Landing page elements - */
+#room-buttons, #landing {
+    opacity: 100;
+    transition: .5s;
+}
+
+/* MARK: - Hidden Elements - */
+#game, #host-options, #join-options, #scoreboard {
+    display: none;
+    opacity: 0;
+    transition: .5s;
+}
+
+/* MARK: - Options/Toggle Buttons - */
+#dark-mode-toggle, #sound-toggle {
+    background: transparent;
+    border: none;
+    font-size: 18pt;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+    position: absolute;
+    top: calc(100% - 40px);
+    left: calc(100% - 40px);
+    transition: .5s;
+}
+#sound-toggle { left: calc(100% - 80px); }
+
+/* MARK: - In-game Messages - */
+#roll-info { display: flex; justify-content: center; }
+#error { transition: .5s; opacity: 0; }
+
+/* MARK: - Dice Styling - */
+#dice-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    width: 100%;
+}
+
+.die {
+    width: 33%;
+    margin-top: 3%;
+    margin-bottom: 1.5%;
+    border: 5px solid black;
+    background-color: white;
+    border-radius: 10%;
+}
+
+/* MARK: - Button Styling - */
+#game-button-container {
+    display: flex;
+    justify-content: center;
+}
+
+button {
+    font-size: 14pt;
+    border-radius: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
+    background: rgb(212,212,212);
+    background: linear-gradient(0deg, rgba(212,212,212,1) 0%, rgba(228,228,228,1) 35%, rgba(255,255,255,1) 100%);
+}
+button:hover { background: #e4e4e4; }
+button:active { background: #d4d4d4; }
+button:disabled { background: #bdbdbd; }
+#restart-button { display: none; }
+
+/* MARK: - Die Spin Animation - */
+.spin { animation: spin .6s linear infinite; }
+@keyframes spin { 100% { -webkit-transform: rotate(360deg); transform: rotate(360deg); } }
+
+
+
+/* MARK: - Dark Mode Styling - */
+.dark-body { background-color: black; color: white; }
+.dark-die { border-color: #1c1c1c; background-color: #303030; }
+
+.dark-button {
+    color: white;
+    border-color: #1c1c1c;
+    background: rgb(68,68,68);
+    background: linear-gradient(0deg, rgba(40,40,40,1) 0%, rgba(47,47,47,1) 35%, rgba(68,68,68,1) 100%);
+}
+.dark-button:hover { background: #2f2f2f; }
+.dark-button:active { background: #444444; }
+.dark-button:disabled { color: gray; background: #4d4b4b; }
+
+/* MARK: - Media Queries for different screen sizes - */
+@media only screen and (min-width: 1000px) {
+    .die { border-width: 10px; width: 24.9%; }
+}
