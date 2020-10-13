@@ -864,7 +864,7 @@ var trBgL = "rgb(221, 221, 221)";
 var trBgD = "rgb(48, 48, 48)";
 /* MARK: - Roll Sounds - */
 
-var rollSounds = [new Audio("./audio/roll1.wav"), new Audio("./audio/roll2.wav"), new Audio("./audio/roll3.wav"), new Audio("./audio/roll4.wav"), new Audio("./audio/roll5.wav"), new Audio("./audio/roll6.wav")];
+var rollSounds = [new Audio("assets/audio/roll1.wav"), new Audio("assets/audio/roll2.wav"), new Audio("assets/audio/roll3.wav"), new Audio("assets/audio/roll4.wav"), new Audio("assets/audio/roll5.wav"), new Audio("assets/audio/roll6.wav")];
 /* MARK: - Global Arrays - */
 
 var dieArray = [];
