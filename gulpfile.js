@@ -72,7 +72,7 @@ const watch = () => {
   gulp.watch('./scss/style.scss', sassTask);
   
   // check for changhes in js files, then run jsTask
-  gulp.watch('./client/*.js', jsTask);
+  gulp.watch('./client/js/*.js', jsTask);
   
   // set up nodemon so it restarts the server on a change on any file (except those already being checked above)
   nodemon({
