@@ -595,12 +595,20 @@ Loads DOM elements upon window load, handles input, handles dark mode, and more.
 window.onload = function () {
   /* MARK: - DOM Elements - */
   var landing = document.querySelector("#landing");
+  var localContainer = document.querySelector("#local-container");
   var localPlayers = document.querySelector("#local-players");
   var nicknames = document.querySelector("#local-nicks");
   var localButton = document.querySelector("#local-play");
   var roomButtons = document.querySelector("#room-buttons");
   var joinOptions = document.querySelector("#join-options");
   var hostOptions = document.querySelector("#host-options");
+  var openButton = document.querySelector("#open-button");
+  var hostButton = document.querySelector("#host-button");
+  var hostNick = document.querySelector("#host-nick");
+  var joinNick = document.querySelector("#join-nick");
+  var hostID = document.querySelector("#host-id");
+  var joinID = document.querySelector("#join-id");
+  var joinButton = document.querySelector("#join-button");
   var gameContainer = document.querySelector("#game");
   var diceContainer = document.querySelector("#dice-container");
   rollButton = document.querySelector("#roll-button");
@@ -731,23 +739,63 @@ window.onload = function () {
     mute = !mute;
     soundToggle.innerHTML = mute ? "🔊" : "🔈";
   };
-  /* MARK: - Networking Menu Options - */
+  /* MARK: - Networking - */
+  // start socket.io and add some universal handlers
 
-  /*
-  // join-room-button
-  roomButtons.children[0].onclick = () => {
-      fade(roomButtons, joinOptions);
-  };
-  
-  // host-room-button
-  roomButtons.children[1].onclick = () => {
-      fade(roomButtons, hostOptions);
-  };
-  */
 
+  socket = io();
+  socket.on('error', function (err) {
+    errDisp(err);
+  }); // join-room-button
+
+  roomButtons.children[0].onclick = function () {
+    // fade old elements out and fade join options in
+    fade(roomButtons, joinOptions);
+    fadeOut(localContainer); // add onclick for join button
+
+    joinButton.onclick = function () {
+      // bring room code to lowercase and remove spaces
+      var joinIDval = joinID.value.toLowerCase().replace(/\s/g, ''); // check and make sure there's enough characters and emit join
+
+      if (joinIDval.length == 6) socket.emit('join', joinIDval, joinNick.value);else errDisp("Please enter a 6-digit room ID.");
+      socket.on('join-success', function () {
+        joinNick.disabled = true;
+        joinButton.disabled = true;
+      });
+    };
+  }; // host-room-button
+
+
+  roomButtons.children[1].onclick = function () {
+    // fade old elements out and fade host options in
+    fade(roomButtons, hostOptions);
+    fadeOut(localContainer);
+
+    openButton.onclick = function () {
+      hostNick.disabled = true; // call for room creation
+
+      socket.emit('create', hostNick.value); // display room-id (called by emitting create) on-screen
+
+      socket.on('room-id', function (data) {
+        hostID.innerHTML = data;
+        fadeIn(scoreboard);
+        openButton.disabled = true;
+        hostButton.disabled = false;
+      });
+    };
+  };
+  /* MARK: - Socket.io Handlers - */
+  // on successful join, show some more things
+
+
+  socket.on('update-scoreboard', function (namesArr, scoresArr) {
+    playerNames = namesArr;
+    scores = scoresArr;
+    createScoreboard();
+    fadeIn(scoreboard);
+  });
   /* MARK: - Local Play Menu Options - */
   // create player entries based on value of localPlayers input
-
 
   localPlayers.onchange = function () {
     // remove all children
@@ -823,11 +871,36 @@ window.onload = function () {
         // landing gets faded out twice, but that's not a big deal
 
         fade(landing, gameContainer);
-        fade(landing, scoreboard);
+        fadeIn(scoreboard);
       }
     } else {
       errDisp("Must have at least one player!");
     }
+  };
+
+  var createScoreboard = function createScoreboard() {
+    // wipe out old scoreboard
+    while (scoreboard.children[0].firstChild) {
+      scoreboard.children[0].removeChild(scoreboard.children[0].firstChild);
+    }
+
+    scoreboardTrs = []; // create elements to be appended to the scoreboard element
+
+    for (var _i18 = 0; _i18 < playerNames.length; _i18++) {
+      var tr = document.createElement("tr");
+      var name = document.createElement("td");
+      var score = document.createElement("td");
+      tr.id = "player" + _i18;
+      if (!(_i18 % 2)) tr.style.backgroundColor = trBgL;
+      name.innerHTML = playerNames[_i18];
+      score.innerHTML = scores[_i18];
+      tr.appendChild(name);
+      tr.appendChild(score);
+      scoreboard.children[0].appendChild(tr);
+      scoreboardTrs.push(document.querySelector("#player" + _i18));
+    }
+
+    showCurrPlayer();
   };
   /* MARK: - In-Game Buttons - */
 
@@ -894,12 +967,13 @@ var mute = false;
 var endgame = false;
 var currPlayer = 0;
 var winnerIndex = -1;
+var socket;
 /* MARK: - Helper Functions - */
 // random int
 
 var random = function random(min, max) {
   return Math.floor(Math.random() * max) + min;
-}; // fading elements in/out helper function
+}; // fading elements in/out helper functions
 
 
 var fade = function fade(el1, el2) {
@@ -911,6 +985,20 @@ var fade = function fade(el1, el2) {
       el2.style.opacity = "100";
     }, 50);
   }, 500);
+};
+
+var fadeOut = function fadeOut(el) {
+  el.style.opacity = "0";
+  setTimeout(function () {
+    el.style.display = "none";
+  }, 500);
+};
+
+var fadeIn = function fadeIn(el) {
+  el.style.display = "block";
+  setTimeout(function () {
+    el.style.opacity = "100";
+  }, 50);
 }; // error display
 
 

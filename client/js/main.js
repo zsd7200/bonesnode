@@ -7,12 +7,20 @@ Loads DOM elements upon window load, handles input, handles dark mode, and more.
 window.onload = () => {
     /* MARK: - DOM Elements - */
     let landing = document.querySelector("#landing");
+    let localContainer = document.querySelector("#local-container");
     let localPlayers = document.querySelector("#local-players");
     let nicknames = document.querySelector("#local-nicks");
     let localButton = document.querySelector("#local-play");
     let roomButtons = document.querySelector("#room-buttons");
     let joinOptions = document.querySelector("#join-options");
     let hostOptions = document.querySelector("#host-options");
+    let openButton = document.querySelector("#open-button");
+    let hostButton = document.querySelector("#host-button");
+    let hostNick = document.querySelector("#host-nick");
+    let joinNick = document.querySelector("#join-nick");
+    let hostID = document.querySelector("#host-id");
+    let joinID = document.querySelector("#join-id");
+    let joinButton = document.querySelector("#join-button");
     let gameContainer = document.querySelector("#game");
     let diceContainer = document.querySelector("#dice-container");
     rollButton = document.querySelector("#roll-button");
@@ -135,18 +143,66 @@ window.onload = () => {
         soundToggle.innerHTML = (mute) ? "🔊" : "🔈";
     };
     
-    /* MARK: - Networking Menu Options - */
-    /*
+    /* MARK: - Networking - */
+    // start socket.io and add some universal handlers
+    socket = io();
+    socket.on('error', (err) => { errDisp(err); });
+    
     // join-room-button
     roomButtons.children[0].onclick = () => {
+        // fade old elements out and fade join options in
         fade(roomButtons, joinOptions);
+        fadeOut(localContainer);
+        
+        // add onclick for join button
+        joinButton.onclick = () => {
+            // bring room code to lowercase and remove spaces
+            let joinIDval = joinID.value.toLowerCase().replace(/\s/g, '');
+            
+            // check and make sure there's enough characters and emit join
+            if(joinIDval.length == 6)
+                socket.emit('join', joinIDval, joinNick.value);
+            else
+                errDisp("Please enter a 6-digit room ID.");
+            
+            socket.on('join-success', () => {
+                joinNick.disabled = true;
+                joinButton.disabled = true;
+            });
+        };
     };
     
     // host-room-button
     roomButtons.children[1].onclick = () => {
+        // fade old elements out and fade host options in
         fade(roomButtons, hostOptions);
+        fadeOut(localContainer);
+        
+        openButton.onclick = () => {
+            hostNick.disabled = true;
+            
+            // call for room creation
+            socket.emit('create', hostNick.value);
+            
+            // display room-id (called by emitting create) on-screen
+            socket.on('room-id', (data) => {
+                hostID.innerHTML = data;
+                fadeIn(scoreboard);
+                openButton.disabled = true;
+                hostButton.disabled = false;
+            });
+        };
     };
-    */
+    
+    /* MARK: - Socket.io Handlers - */
+    // on successful join, show some more things
+    socket.on('update-scoreboard', (namesArr, scoresArr) => {
+        playerNames = namesArr;
+        scores = scoresArr;
+        
+        createScoreboard();
+        fadeIn(scoreboard);
+    });
     
     /* MARK: - Local Play Menu Options - */
     // create player entries based on value of localPlayers input
@@ -232,11 +288,40 @@ window.onload = () => {
                 // fade out landing and fade in gamecontainer and scoreboard
                 // landing gets faded out twice, but that's not a big deal
                 fade(landing, gameContainer);
-                fade(landing, scoreboard);
+                fadeIn(scoreboard);
             }
         } else {
             errDisp("Must have at least one player!");
         }
+    };
+    
+    let createScoreboard = () => {
+        // wipe out old scoreboard
+        while(scoreboard.children[0].firstChild)
+            scoreboard.children[0].removeChild(scoreboard.children[0].firstChild);
+        
+        scoreboardTrs = [];
+        
+        // create elements to be appended to the scoreboard element
+        for(let i = 0; i < playerNames.length; i++) {
+            let tr = document.createElement("tr");
+            let name = document.createElement("td");
+            let score = document.createElement("td");
+            
+            tr.id = "player" + i;
+            if(!(i % 2))
+                tr.style.backgroundColor = trBgL;
+            
+            name.innerHTML = playerNames[i];
+            score.innerHTML = scores[i];
+            
+            tr.appendChild(name);
+            tr.appendChild(score);
+            scoreboard.children[0].appendChild(tr);
+            scoreboardTrs.push(document.querySelector("#player" + i));
+        }
+        
+        showCurrPlayer();
     };
     
     /* MARK: - In-Game Buttons - */

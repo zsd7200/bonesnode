@@ -8,6 +8,8 @@ body {
     overflow-x: hidden;
 }
 
+#host-id { font-weight: bold; font-size: 14pt; font-family: monospace; }
+
 /* MARK: - Table/Scoreboard - */
 table {
     border-collapse: collapse;
@@ -42,7 +44,7 @@ td, th {
 }
 
 /* MARK: - Landing page elements - */
-#room-buttons, #landing {
+#room-buttons, #local-container, #landing {
     opacity: 100;
     transition: .5s;
 }

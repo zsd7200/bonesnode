@@ -82,12 +82,13 @@ let mute = false;
 let endgame = false;
 let currPlayer = 0;
 let winnerIndex = -1;
+let socket;
 
 /* MARK: - Helper Functions - */
 // random int
 let random = (min, max) => { return Math.floor(Math.random() * max) + min; };
 
-// fading elements in/out helper function
+// fading elements in/out helper functions
 let fade = (el1, el2) => {
     el1.style.opacity = "0";
     setTimeout(() => {
@@ -98,6 +99,16 @@ let fade = (el1, el2) => {
             el2.style.opacity = "100";
         }, 50);
     }, 500);
+};
+
+let fadeOut = (el) => {
+    el.style.opacity = "0";
+    setTimeout(() => { el.style.display = "none"; }, 500);
+};
+
+let fadeIn = (el) => {
+    el.style.display = "block";
+    setTimeout(() => { el.style.opacity = "100"; }, 50);
 };
 
 // error display

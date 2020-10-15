@@ -5,33 +5,43 @@
         <div id="landing">
             <h1>Bones</h1>
             
-            <label for="local-players">Local Players: </label>
-            <input type="number" id="local-players" name="local-players" value=0 min=0 max=10><br><br>
-            
-            <div id="local-nicks"></div>
+            <div id="local-container">
+                <label for="local-players">Local Players: </label>
+                <input type="number" id="local-players" name="local-players" value=0 min=0 max=10><br><br>
+                
+                <div id="local-nicks"></div>
+                
+                <button id="local-play">Start Local Game</button>
+            </div>
             
             <br>
             
-            <!--
             <div id="room-buttons">
                 <button id="join-room-button">Join Game</button>
                 <button id="host-room-button">Host Game</button>
             </div>
             
             <div id="join-options">
-                <label for="id">Room ID: </label>
-                <input type="text" id="id" name="id" placeholder="Room ID"><br>
+                <label for="join-nick">Nickname: </label>
+                <input type="text" id="join-nick" name="join-nick" placeholder="Nickname"><br>
+                <label for="join-id">Room ID: </label>
+                <input type="text" id="join-id" name="join-id" placeholder="Room ID"><br>
                 <button id="join-button">Join Game</buttom>
             </div>
             
             <div id="host-options">
+                <!--
                 <label for="max">Max Players: </label>
                 <input type="number" id="max" name="max" value=2 min=1 max=10><br>
-                <button id="host-button">Host Game</button>
+                -->
+                <label for="host-nick">Nickname: </label>
+                <input type="text" id="host-nick" name="host-nick" placeholder="Nickname"><br>
+                <p>Room ID: <span id="host-id">??????</span></p>
+                <button id="open-button">Open Room</button>
+                <button id="host-button" disabled>Start Game</button>
             </div>
-            -->
             
-            <button id="local-play">Start Local Game</button>
+            
         </div>
 
         <div id="game">   
