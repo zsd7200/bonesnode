@@ -406,20 +406,3 @@ let endTurn = () => {
         updateRollScore();
     }
 };
-
-/* MARK: - Other - */
-let showCurrPlayer = (num = 0) => {
-    for(let i = 0; i < scoreboardTrs.length; i++) {
-        if(i != num) {
-            for(let j = 0; j < scoreboardTrs[i].children.length; j++) {
-                scoreboardTrs[i].children[j].style.color = (darkMode) ? "white" : "black";
-                scoreboardTrs[i].children[j].style.fontWeight = "normal";
-            }
-        } else {
-            for(let j = 0; j < scoreboardTrs[i].children.length; j++) {
-                scoreboardTrs[i].children[j].style.color = "red";
-                scoreboardTrs[i].children[j].style.fontWeight = "bold";
-            }
-        }
-    }
-};

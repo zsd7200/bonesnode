@@ -565,26 +565,6 @@ var endTurn = function endTurn() {
     updateRollScore();
   }
 };
-/* MARK: - Other - */
-
-
-var showCurrPlayer = function showCurrPlayer() {
-  var num = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-
-  for (var i = 0; i < scoreboardTrs.length; i++) {
-    if (i != num) {
-      for (var j = 0; j < scoreboardTrs[i].children.length; j++) {
-        scoreboardTrs[i].children[j].style.color = darkMode ? "white" : "black";
-        scoreboardTrs[i].children[j].style.fontWeight = "normal";
-      }
-    } else {
-      for (var _j = 0; _j < scoreboardTrs[i].children.length; _j++) {
-        scoreboardTrs[i].children[_j].style.color = "red";
-        scoreboardTrs[i].children[_j].style.fontWeight = "bold";
-      }
-    }
-  }
-};
 /*
 MAIN.JS
 
@@ -619,6 +599,8 @@ window.onload = function () {
   currRoll = document.querySelector("#curr-roll");
   var darkModeToggle = document.querySelector("#dark-mode-toggle");
   var soundToggle = document.querySelector("#sound-toggle");
+  var isMultiplayer = false;
+  var room;
   /* MARK: - Dice Setup - */
 
   for (var i = 0; i < diceContainer.children.length; i++) {
@@ -740,13 +722,10 @@ window.onload = function () {
     soundToggle.innerHTML = mute ? "🔊" : "🔈";
   };
   /* MARK: - Networking - */
-  // start socket.io and add some universal handlers
+  // start socket.io
 
 
-  socket = io();
-  socket.on('error', function (err) {
-    errDisp(err);
-  }); // join-room-button
+  socket = io(); // join-room-button
 
   roomButtons.children[0].onclick = function () {
     // fade old elements out and fade join options in
@@ -755,13 +734,30 @@ window.onload = function () {
 
     joinButton.onclick = function () {
       // bring room code to lowercase and remove spaces
-      var joinIDval = joinID.value.toLowerCase().replace(/\s/g, ''); // check and make sure there's enough characters and emit join
+      var joinIDval = joinID.value.toLowerCase().replace(/\s/g, '');
+      var name = joinNick.value;
+      var validName = true;
+      if (name.length <= 1) validName = false; // check if names are the same
+      // TODO: fix this, it seems like playerNames is empty
 
-      if (joinIDval.length == 6) socket.emit('join', joinIDval, joinNick.value);else errDisp("Please enter a 6-digit room ID.");
-      socket.on('join-success', function () {
-        joinNick.disabled = true;
-        joinButton.disabled = true;
-      });
+      for (var _i14 = 0; _i14 < playerNames.length; _i14++) {
+        if (name == playerNames[_i14]) {
+          validName = false;
+          break;
+        }
+      }
+
+      if (validName) {
+        // check and make sure there's enough characters and emit join
+        if (joinIDval.length == 6) socket.emit('join', name, joinIDval);else errDisp("Please enter a 6-digit room ID.");
+        socket.on('join-success', function (pId) {
+          joinNick.disabled = true;
+          joinID.disabled = true;
+          joinButton.disabled = true;
+          playerId = pId;
+          errDisp("Joined game! Waiting to start...");
+        });
+      } else errDisp("Invalid name input. Please enter something else.");
     };
   }; // host-room-button
 
@@ -778,21 +774,43 @@ window.onload = function () {
 
       socket.on('room-id', function (data) {
         hostID.innerHTML = data;
+        room = data;
         fadeIn(scoreboard);
         openButton.disabled = true;
         hostButton.disabled = false;
+        playerId = 0;
       });
     };
+  }; // host button--starts the multiplayer game
+
+
+  hostButton.onclick = function () {
+    // set isMulti and apply button handlers
+    isMultiplayer = true;
+    applyButtonHandlers(); // call start
+
+    socket.emit('start', room);
   };
   /* MARK: - Socket.io Handlers - */
   // on successful join, show some more things
 
 
-  socket.on('update-scoreboard', function (namesArr, scoresArr) {
-    playerNames = namesArr;
-    scores = scoresArr;
+  socket.on('update-scoreboard', function (returnData) {
+    // make copies of the returnData arrays
+    playerNames = _toConsumableArray(returnData[0]);
+    scores = _toConsumableArray(returnData[1]);
     createScoreboard();
+    showCurrPlayer(playerId);
     fadeIn(scoreboard);
+  }); // display error on screen
+
+  socket.on('error', function (err) {
+    errDisp(err);
+  }); // start game by displaying the game container
+
+  socket.on('start-game', function () {
+    fade(landing, gameContainer);
+    showCurrPlayer();
   });
   /* MARK: - Local Play Menu Options - */
   // create player entries based on value of localPlayers input
@@ -804,18 +822,19 @@ window.onload = function () {
     } // create new children
 
 
-    for (var _i14 = 0; _i14 < localPlayers.value; _i14++) {
+    for (var _i15 = 0; _i15 < localPlayers.value; _i15++) {
       var label = document.createElement("label");
       var input = document.createElement("input");
       var br = document.createElement("br");
-      var name = "nick" + _i14; // fill out data
+      var name = "nick" + _i15; // fill out data
 
       label.htmlFor = name;
       label.innerHTML = name + ": ";
       input.type = "text";
       input.id = name;
       input.name = name;
-      input.placeholder = name; // append to nicknames div
+      input.placeholder = name;
+      input.setAttribute("maxlength", 12); // append to nicknames div
 
       nicknames.appendChild(label);
       nicknames.appendChild(input);
@@ -825,18 +844,19 @@ window.onload = function () {
 
 
   localButton.onclick = function () {
-    var invalidInput = false; // first check and make sure there's at least one player
+    var invalidInput = false;
+    isMultiplayer = false; // first check and make sure there's at least one player
 
     if (localPlayers.value != 0) {
       // check for invalid input
-      for (var _i15 = 0; _i15 < nicknames.children.length; _i15++) {
-        if (nicknames.children[_i15].type == "text") {
-          if (nicknames.children[_i15].value == "") {
+      for (var _i16 = 0; _i16 < nicknames.children.length; _i16++) {
+        if (nicknames.children[_i16].type == "text") {
+          if (nicknames.children[_i16].value.length <= 1) {
             invalidInput = true;
           }
 
           for (var j = 0; j < nicknames.children.length; j++) {
-            if (_i15 != j && nicknames.children[_i15].value == nicknames.children[j].value) invalidInput = true;
+            if (_i16 != j && nicknames.children[_i16].value == nicknames.children[j].value) invalidInput = true;
           }
         }
       } // check for invalid name input
@@ -845,38 +865,27 @@ window.onload = function () {
       if (invalidInput) {
         errDisp("Invalid name input!");
       } else {
-        for (var _i16 = 0; _i16 < nicknames.children.length; _i16++) {
-          if (nicknames.children[_i16].type == "text") {
-            playerNames.push(nicknames.children[_i16].value);
+        for (var _i17 = 0; _i17 < nicknames.children.length; _i17++) {
+          if (nicknames.children[_i17].type == "text") {
+            playerNames.push(nicknames.children[_i17].value);
             scores.push(0);
           }
-        } // create elements to be appended to the scoreboard element
+        } // create the scoreboard and indicate current player
 
 
-        for (var _i17 = 0; _i17 < playerNames.length; _i17++) {
-          var tr = document.createElement("tr");
-          var name = document.createElement("td");
-          var score = document.createElement("td");
-          tr.id = "player" + _i17;
-          if (!(_i17 % 2)) tr.style.backgroundColor = trBgL;
-          name.innerHTML = playerNames[_i17];
-          score.innerHTML = scores[_i17];
-          tr.appendChild(name);
-          tr.appendChild(score);
-          scoreboard.children[0].appendChild(tr);
-          scoreboardTrs.push(document.querySelector("#player" + _i17));
-        }
-
+        createScoreboard();
         showCurrPlayer(); // fade out landing and fade in gamecontainer and scoreboard
         // landing gets faded out twice, but that's not a big deal
 
         fade(landing, gameContainer);
         fadeIn(scoreboard);
       }
-    } else {
-      errDisp("Must have at least one player!");
-    }
-  };
+    } else errDisp("Must have at least one player!"); // apply button handlers
+
+
+    applyButtonHandlers();
+  }; // function to create the scoreboard
+
 
   var createScoreboard = function createScoreboard() {
     // wipe out old scoreboard
@@ -884,7 +893,16 @@ window.onload = function () {
       scoreboard.children[0].removeChild(scoreboard.children[0].firstChild);
     }
 
-    scoreboardTrs = []; // create elements to be appended to the scoreboard element
+    scoreboardTrs = []; // re-create header
+
+    var headTr = document.createElement("tr");
+    var playerTh = document.createElement("th");
+    var scoreTh = document.createElement("th");
+    playerTh.innerHTML = "Player";
+    scoreTh.innerHTML = "Score";
+    headTr.appendChild(playerTh);
+    headTr.appendChild(scoreTh);
+    scoreboard.children[0].appendChild(headTr); // create elements to be appended to the scoreboard element
 
     for (var _i18 = 0; _i18 < playerNames.length; _i18++) {
       var tr = document.createElement("tr");
@@ -899,15 +917,15 @@ window.onload = function () {
       scoreboard.children[0].appendChild(tr);
       scoreboardTrs.push(document.querySelector("#player" + _i18));
     }
-
-    showCurrPlayer();
   };
   /* MARK: - In-Game Buttons - */
 
 
-  rollButton.onclick = roll;
-  endTurnButton.onclick = endTurn;
-  restartButton.onclick = restart;
+  var applyButtonHandlers = function applyButtonHandlers() {
+    rollButton.onclick = isMultiplayer ? roll : roll;
+    endTurnButton.onclick = isMultiplayer ? endTurn : endTurn;
+    restartButton.onclick = isMultiplayer ? restart : restart;
+  };
 };
 /*
 VARIABLES.JS
@@ -966,6 +984,7 @@ var darkMode = false;
 var mute = false;
 var endgame = false;
 var currPlayer = 0;
+var playerId = 0;
 var winnerIndex = -1;
 var socket;
 /* MARK: - Helper Functions - */
@@ -1030,4 +1049,23 @@ var updateRollScore = function updateRollScore() {
 
   currRoll.innerHTML = scoreCalc();
   rolls = rollCopy;
+}; // highlight current player's name
+
+
+var showCurrPlayer = function showCurrPlayer() {
+  var num = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+
+  for (var i = 0; i < scoreboardTrs.length; i++) {
+    if (i != num) {
+      for (var j = 0; j < scoreboardTrs[i].children.length; j++) {
+        scoreboardTrs[i].children[j].style.color = darkMode ? "white" : "black";
+        scoreboardTrs[i].children[j].style.fontWeight = "normal";
+      }
+    } else {
+      for (var _j = 0; _j < scoreboardTrs[i].children.length; _j++) {
+        scoreboardTrs[i].children[_j].style.color = "red";
+        scoreboardTrs[i].children[_j].style.fontWeight = "bold";
+      }
+    }
+  }
 };

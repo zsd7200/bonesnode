@@ -81,6 +81,7 @@ let darkMode = false;
 let mute = false;
 let endgame = false;
 let currPlayer = 0;
+let playerId = 0;
 let winnerIndex = -1;
 let socket;
 
@@ -140,4 +141,21 @@ let updateRollScore = () => {
     // call scorecalc on die selection, then reset rolls to the backup
     currRoll.innerHTML = scoreCalc();
     rolls = rollCopy;
+};
+
+// highlight current player's name
+let showCurrPlayer = (num = 0) => {
+    for(let i = 0; i < scoreboardTrs.length; i++) {
+        if(i != num) {
+            for(let j = 0; j < scoreboardTrs[i].children.length; j++) {
+                scoreboardTrs[i].children[j].style.color = (darkMode) ? "white" : "black";
+                scoreboardTrs[i].children[j].style.fontWeight = "normal";
+            }
+        } else {
+            for(let j = 0; j < scoreboardTrs[i].children.length; j++) {
+                scoreboardTrs[i].children[j].style.color = "red";
+                scoreboardTrs[i].children[j].style.fontWeight = "bold";
+            }
+        }
+    }
 };

@@ -23,9 +23,9 @@
             
             <div id="join-options">
                 <label for="join-nick">Nickname: </label>
-                <input type="text" id="join-nick" name="join-nick" placeholder="Nickname"><br>
+                <input type="text" id="join-nick" name="join-nick" placeholder="Nickname" maxlength=12><br>
                 <label for="join-id">Room ID: </label>
-                <input type="text" id="join-id" name="join-id" placeholder="Room ID"><br>
+                <input type="text" id="join-id" name="join-id" placeholder="Room ID" autocomplete="off"><br>
                 <button id="join-button">Join Game</buttom>
             </div>
             
@@ -35,7 +35,7 @@
                 <input type="number" id="max" name="max" value=2 min=1 max=10><br>
                 -->
                 <label for="host-nick">Nickname: </label>
-                <input type="text" id="host-nick" name="host-nick" placeholder="Nickname"><br>
+                <input type="text" id="host-nick" name="host-nick" placeholder="Nickname" maxlength=12><br>
                 <p>Room ID: <span id="host-id">??????</span></p>
                 <button id="open-button">Open Room</button>
                 <button id="host-button" disabled>Start Game</button>

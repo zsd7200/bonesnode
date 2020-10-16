@@ -56,6 +56,7 @@ io.on('connection', (socket) => {
   const updateScoreboard = (room) => {
     const nameData = [];
     const scoreData = [];
+    const returnData = [];
 
     for (let i = 0; i < playerData.length; i++) {
       if (room === playerData[i].room_id) {
@@ -64,7 +65,10 @@ io.on('connection', (socket) => {
       }
     }
 
-    io.to(room).emit('update-scoreboard', nameData, scoreData);
+    returnData.push(nameData);
+    returnData.push(scoreData);
+
+    io.to(room).emit('update-scoreboard', returnData);
   };
 
   // hosting a room
@@ -111,16 +115,16 @@ io.on('connection', (socket) => {
     if (doesExist && players < 10) {
       socket.join(room);
       playerData.push(json);
-      io.to(socket.id).emit('join-success');
+      io.to(socket.id).emit('join-success', players);
       updateScoreboard(room);
     } else if (!doesExist) io.to(socket.id).emit('error', 'Invalid room code. Please try again.');
     else if (players <= 10) io.to(socket.id).emit('error', 'Room is full! Please try again later.');
     else io.to(socket.id).emit('error', 'Something went wrong. Please try again.');
   });
 
-  // changing a nickname
-  socket.on('nick', (nick) => {
-    console.log(nick);
+  // start game
+  socket.on('start', (room) => {
+    io.to(room).emit('start-game');
   });
 
   // disconnecting
@@ -149,6 +153,7 @@ io.on('connection', (socket) => {
 
     // remove empty room from rooms array
     if (empty) rooms.splice(rooms.indexOf(room), 1);
+    else updateScoreboard(room);
   });
 });
 

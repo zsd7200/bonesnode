@@ -31,6 +31,8 @@ window.onload = () => {
     currRoll = document.querySelector("#curr-roll");
     let darkModeToggle = document.querySelector("#dark-mode-toggle");
     let soundToggle = document.querySelector("#sound-toggle");
+    let isMultiplayer = false;
+    let room;
     
     /* MARK: - Dice Setup - */
     for(let i = 0; i < diceContainer.children.length; i++) {
@@ -144,9 +146,8 @@ window.onload = () => {
     };
     
     /* MARK: - Networking - */
-    // start socket.io and add some universal handlers
+    // start socket.io
     socket = io();
-    socket.on('error', (err) => { errDisp(err); });
     
     // join-room-button
     roomButtons.children[0].onclick = () => {
@@ -158,17 +159,37 @@ window.onload = () => {
         joinButton.onclick = () => {
             // bring room code to lowercase and remove spaces
             let joinIDval = joinID.value.toLowerCase().replace(/\s/g, '');
+            let name = joinNick.value;
+            let validName = true;
+
+            if(name.length <= 1)
+                validName = false;
+
+            // check if names are the same
+            // TODO: fix this, it seems like playerNames is empty
+            for(let i = 0; i < playerNames.length; i++) {
+                if(name == playerNames[i]) {
+                    validName = false;
+                    break;
+                }
+            }
             
-            // check and make sure there's enough characters and emit join
-            if(joinIDval.length == 6)
-                socket.emit('join', joinIDval, joinNick.value);
-            else
-                errDisp("Please enter a 6-digit room ID.");
-            
-            socket.on('join-success', () => {
-                joinNick.disabled = true;
-                joinButton.disabled = true;
-            });
+            if(validName) {
+                // check and make sure there's enough characters and emit join
+                if(joinIDval.length == 6)
+                    socket.emit('join', name, joinIDval);
+                else
+                    errDisp("Please enter a 6-digit room ID.");
+                
+                socket.on('join-success', (pId) => {
+                    joinNick.disabled = true;
+                    joinID.disabled = true;
+                    joinButton.disabled = true;
+                    playerId = pId;
+                    errDisp("Joined game! Waiting to start...");
+                });
+            } else
+                errDisp("Invalid name input. Please enter something else.");
         };
     };
     
@@ -187,21 +208,45 @@ window.onload = () => {
             // display room-id (called by emitting create) on-screen
             socket.on('room-id', (data) => {
                 hostID.innerHTML = data;
+                room = data;
                 fadeIn(scoreboard);
                 openButton.disabled = true;
                 hostButton.disabled = false;
+                playerId = 0;
             });
         };
     };
     
+    // host button--starts the multiplayer game
+    hostButton.onclick = () => {
+        // set isMulti and apply button handlers
+        isMultiplayer = true;
+        applyButtonHandlers();
+        
+        // call start
+        socket.emit('start', room);
+    };
+    
     /* MARK: - Socket.io Handlers - */
     // on successful join, show some more things
-    socket.on('update-scoreboard', (namesArr, scoresArr) => {
-        playerNames = namesArr;
-        scores = scoresArr;
+    socket.on('update-scoreboard', (returnData) => {     
+    
+        // make copies of the returnData arrays
+        playerNames = [...returnData[0]];
+        scores = [...returnData[1]];
         
         createScoreboard();
+        showCurrPlayer(playerId);
         fadeIn(scoreboard);
+    });
+    
+    // display error on screen
+    socket.on('error', (err) => { errDisp(err); });
+    
+    // start game by displaying the game container
+    socket.on('start-game', () => {
+        fade(landing, gameContainer); 
+        showCurrPlayer();
     });
     
     /* MARK: - Local Play Menu Options - */
@@ -225,6 +270,7 @@ window.onload = () => {
             input.id = name;
             input.name = name;
             input.placeholder = name;
+            input.setAttribute("maxlength", 12);
             
             // append to nicknames div
             nicknames.appendChild(label);
@@ -236,13 +282,14 @@ window.onload = () => {
     // check for invalid input, then set up a local game
     localButton.onclick = () => {
         let invalidInput = false;
+        isMultiplayer = false;
         
         // first check and make sure there's at least one player
         if(localPlayers.value != 0) {            
             // check for invalid input
             for(let i = 0; i < nicknames.children.length; i++) {
                 if(nicknames.children[i].type == "text") {
-                    if(nicknames.children[i].value == "") {
+                    if(nicknames.children[i].value.length <= 1) {
                         invalidInput = true;
                     }
                     
@@ -264,25 +311,8 @@ window.onload = () => {
                     }
                 }
                 
-                // create elements to be appended to the scoreboard element
-                for(let i = 0; i < playerNames.length; i++) {
-                    let tr = document.createElement("tr");
-                    let name = document.createElement("td");
-                    let score = document.createElement("td");
-                    
-                    tr.id = "player" + i;
-                    if(!(i % 2))
-                        tr.style.backgroundColor = trBgL;
-                    
-                    name.innerHTML = playerNames[i];
-                    score.innerHTML = scores[i];
-                    
-                    tr.appendChild(name);
-                    tr.appendChild(score);
-                    scoreboard.children[0].appendChild(tr);
-                    scoreboardTrs.push(document.querySelector("#player" + i));
-                }
-                
+                // create the scoreboard and indicate current player
+                createScoreboard();
                 showCurrPlayer();
                 
                 // fade out landing and fade in gamecontainer and scoreboard
@@ -290,17 +320,30 @@ window.onload = () => {
                 fade(landing, gameContainer);
                 fadeIn(scoreboard);
             }
-        } else {
+        } else
             errDisp("Must have at least one player!");
-        }
+        
+        // apply button handlers
+        applyButtonHandlers();
     };
     
+    // function to create the scoreboard
     let createScoreboard = () => {
         // wipe out old scoreboard
         while(scoreboard.children[0].firstChild)
             scoreboard.children[0].removeChild(scoreboard.children[0].firstChild);
-        
         scoreboardTrs = [];
+        
+        // re-create header
+        let headTr = document.createElement("tr");
+        let playerTh = document.createElement("th");
+        let scoreTh = document.createElement("th");
+        
+        playerTh.innerHTML = "Player";
+        scoreTh.innerHTML = "Score";
+        headTr.appendChild(playerTh);
+        headTr.appendChild(scoreTh);
+        scoreboard.children[0].appendChild(headTr);
         
         // create elements to be appended to the scoreboard element
         for(let i = 0; i < playerNames.length; i++) {
@@ -320,12 +363,12 @@ window.onload = () => {
             scoreboard.children[0].appendChild(tr);
             scoreboardTrs.push(document.querySelector("#player" + i));
         }
-        
-        showCurrPlayer();
     };
     
     /* MARK: - In-Game Buttons - */
-    rollButton.onclick = roll;
-    endTurnButton.onclick = endTurn;
-    restartButton.onclick = restart;
+    let applyButtonHandlers = () => {
+        rollButton.onclick = (isMultiplayer) ? roll : roll;
+        endTurnButton.onclick = (isMultiplayer) ? endTurn : endTurn;
+        restartButton.onclick = (isMultiplayer) ? restart : restart;
+    };
 };
