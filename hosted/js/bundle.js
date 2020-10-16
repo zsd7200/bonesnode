@@ -78,8 +78,9 @@ var reroll = function reroll(die) {
 
 
 var rerollFace = function rerollFace(die) {
-  // randomly pick a number for use later
-  var rand = random(0, diceSrcL.length); // set die to rand
+  var num = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : -1;
+  // randomly pick a number for use later, or use the passed in num
+  var rand = num != -1 ? num : random(0, diceSrcL.length); // set die to rand
 
   die.src = darkMode ? diceSrcD[rand] : diceSrcL[rand];
   die.alt = diceAlt[rand];
@@ -565,6 +566,15 @@ var endTurn = function endTurn() {
     updateRollScore();
   }
 };
+/* MARK: - Multiplayer-Specific Functions - */
+// lock dice for everyone except whoever's turn it is
+
+
+var setTurn = function setTurn() {
+  for (var i = 0; i < diceContainer.children.length; i++) {
+    if (currPlayer == playerId) setupDie(dieArray[i]);else freeze(dieArray[i]);
+  }
+};
 /*
 MAIN.JS
 
@@ -605,7 +615,6 @@ window.onload = function () {
 
   for (var i = 0; i < diceContainer.children.length; i++) {
     dieArray.push(diceContainer.children[i]);
-    setupDie(dieArray[i]);
   }
   /* MARK: - CORS Bypass for Audio - */
 
@@ -811,6 +820,7 @@ window.onload = function () {
   socket.on('start-game', function () {
     fade(landing, gameContainer);
     showCurrPlayer();
+    setTurn();
   });
   /* MARK: - Local Play Menu Options - */
   // create player entries based on value of localPlayers input
@@ -883,7 +893,11 @@ window.onload = function () {
     } else errDisp("Must have at least one player!"); // apply button handlers
 
 
-    applyButtonHandlers();
+    applyButtonHandlers(); // setup dice for single player
+
+    for (var _i18 = 0; _i18 < diceContainer.children.length; _i18++) {
+      setupDie(dieArray[_i18]);
+    }
   }; // function to create the scoreboard
 
 
@@ -904,18 +918,18 @@ window.onload = function () {
     headTr.appendChild(scoreTh);
     scoreboard.children[0].appendChild(headTr); // create elements to be appended to the scoreboard element
 
-    for (var _i18 = 0; _i18 < playerNames.length; _i18++) {
+    for (var _i19 = 0; _i19 < playerNames.length; _i19++) {
       var tr = document.createElement("tr");
       var name = document.createElement("td");
       var score = document.createElement("td");
-      tr.id = "player" + _i18;
-      if (!(_i18 % 2)) tr.style.backgroundColor = trBgL;
-      name.innerHTML = playerNames[_i18];
-      score.innerHTML = scores[_i18];
+      tr.id = "player" + _i19;
+      if (!(_i19 % 2)) tr.style.backgroundColor = trBgL;
+      name.innerHTML = playerNames[_i19];
+      score.innerHTML = scores[_i19];
       tr.appendChild(name);
       tr.appendChild(score);
       scoreboard.children[0].appendChild(tr);
-      scoreboardTrs.push(document.querySelector("#player" + _i18));
+      scoreboardTrs.push(document.querySelector("#player" + _i19));
     }
   };
   /* MARK: - In-Game Buttons - */
@@ -984,7 +998,8 @@ var darkMode = false;
 var mute = false;
 var endgame = false;
 var currPlayer = 0;
-var playerId = 0;
+var playerId = 0; // this is different per each connected client
+
 var winnerIndex = -1;
 var socket;
 /* MARK: - Helper Functions - */

@@ -63,9 +63,9 @@ let reroll = (die) => {
 };
 
 // reroll die face
-let rerollFace = (die) => {
-    // randomly pick a number for use later
-    let rand = random(0, diceSrcL.length);
+let rerollFace = (die, num = -1) => {
+    // randomly pick a number for use later, or use the passed in num
+    let rand = (num != -1) ? num : random(0, diceSrcL.length);
     
     // set die to rand
     die.src = (darkMode) ? diceSrcD[rand] : diceSrcL[rand];

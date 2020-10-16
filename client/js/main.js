@@ -35,10 +35,8 @@ window.onload = () => {
     let room;
     
     /* MARK: - Dice Setup - */
-    for(let i = 0; i < diceContainer.children.length; i++) {
+    for(let i = 0; i < diceContainer.children.length; i++)
         dieArray.push(diceContainer.children[i]);
-        setupDie(dieArray[i]);
-    }
     
     /* MARK: - CORS Bypass for Audio - */
     for(let i = 0; i < rollSounds.length; i++) {
@@ -247,6 +245,7 @@ window.onload = () => {
     socket.on('start-game', () => {
         fade(landing, gameContainer); 
         showCurrPlayer();
+        setTurn();
     });
     
     /* MARK: - Local Play Menu Options - */
@@ -325,6 +324,10 @@ window.onload = () => {
         
         // apply button handlers
         applyButtonHandlers();
+        
+        // setup dice for single player
+        for(let i = 0; i < diceContainer.children.length; i++)
+            setupDie(dieArray[i]);
     };
     
     // function to create the scoreboard

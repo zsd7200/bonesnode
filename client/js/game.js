@@ -406,3 +406,14 @@ let endTurn = () => {
         updateRollScore();
     }
 };
+
+/* MARK: - Multiplayer-Specific Functions - */
+// lock dice for everyone except whoever's turn it is
+let setTurn = () => {
+    for(let i = 0; i < diceContainer.children.length; i++) {
+        if(currPlayer == playerId)
+            setupDie(dieArray[i]);
+        else
+            freeze(dieArray[i]);
+    }
+};
