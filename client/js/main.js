@@ -22,7 +22,7 @@ window.onload = () => {
     let joinID = document.querySelector("#join-id");
     let joinButton = document.querySelector("#join-button");
     let gameContainer = document.querySelector("#game");
-    let diceContainer = document.querySelector("#dice-container");
+    diceContainer = document.querySelector("#dice-container");
     rollButton = document.querySelector("#roll-button");
     endTurnButton = document.querySelector("#end-turn-button");
     restartButton = document.querySelector("#restart-button");
@@ -31,8 +31,6 @@ window.onload = () => {
     currRoll = document.querySelector("#curr-roll");
     let darkModeToggle = document.querySelector("#dark-mode-toggle");
     let soundToggle = document.querySelector("#sound-toggle");
-    let isMultiplayer = false;
-    let room;
     
     /* MARK: - Dice Setup - */
     for(let i = 0; i < diceContainer.children.length; i++)
@@ -147,6 +145,17 @@ window.onload = () => {
     // start socket.io
     socket = io();
     
+    // set up some event handlers from other methods
+    // Dice.js
+    setupMultiHandler();
+    matchRollHandler();
+    selectDieHandler();
+    
+    // Game.js
+    rollMultiHandler();
+    endTurnMultiHandler();
+    restartMultiHandler();
+    
     // join-room-button
     roomButtons.children[0].onclick = () => {
         // fade old elements out and fade join options in
@@ -245,7 +254,11 @@ window.onload = () => {
     socket.on('start-game', () => {
         fade(landing, gameContainer); 
         showCurrPlayer();
-        setTurn();
+        //setTurn();
+        
+        for(let i = 0; i < dieArray.length; i++) {
+            setupDie(dieArray[i]);
+        }
     });
     
     /* MARK: - Local Play Menu Options - */
@@ -370,8 +383,8 @@ window.onload = () => {
     
     /* MARK: - In-Game Buttons - */
     let applyButtonHandlers = () => {
-        rollButton.onclick = (isMultiplayer) ? roll : roll;
-        endTurnButton.onclick = (isMultiplayer) ? endTurn : endTurn;
-        restartButton.onclick = (isMultiplayer) ? restart : restart;
+        rollButton.onclick = (isMultiplayer) ? rollMulti : roll;
+        endTurnButton.onclick = (isMultiplayer) ? endTurnMulti : endTurn;
+        restartButton.onclick = (isMultiplayer) ? restartMulti : restart;
     };
 };

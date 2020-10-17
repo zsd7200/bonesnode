@@ -1,4 +1,4 @@
-# Bonesnode-sockets_branch TODO List
-- issues with not being able to connect sometimes?
+# Bonesnode-socket_branch TODO List
 - nickname validation over networking
-- actual gameplay over networking
+- `endTurn` and `restart` over networking
+- handle local data editing after a user drops connection

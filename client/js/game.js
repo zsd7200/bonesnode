@@ -1,7 +1,7 @@
 /*
 GAME.JS
 
-Functions related to scoring and game-related elements.
+Functions related to scoring and game-related elements for both local and online multiplayer.
 */
 
 
@@ -14,22 +14,22 @@ let countDice = (checkWhite = false) => {
         if(dieArray[i].style.backgroundColor == selectedColor || (checkWhite == true && dieArray[i].style.backgroundColor != previouslySelectedColor)) {
             
             switch(dieArray[i].title) {
-                case "one":
+                case "1":
                     diceCount[0]++;
                     break;
-                case "two":
+                case "2":
                     diceCount[1]++;
                     break;
-                case "three":
+                case "3":
                     diceCount[2]++;
                     break;
-                case "four":
+                case "4":
                     diceCount[3]++;
                     break;
-                case "five":
+                case "5":
                     diceCount[4]++;
                     break;
-                case "six":
+                case "6":
                     diceCount[5]++;
                     break;
                     
@@ -211,7 +211,10 @@ let scoreAdd = (count) => {
 
 /* MARK: - Rolling, Restarting, Ending Turn - */
 // roll dice
-let roll = () => {
+let roll = () => {    
+    // clear errDisp
+    errDisp();
+    
     if(dieSelectValidation()) {
         let unselected = 0;
         
@@ -257,9 +260,24 @@ let roll = () => {
                     break;
             }
         }
+        
+        // match rolls for all players after spin animation
+        setTimeout(() => {
+            // parse title for int, subtract one, push to currRollArr
+            for(let i = 0; i < dieArray.length; i++) {
+                if(currPlayer == playerId)
+                    currRollArr[i] = parseInt(dieArray[i].title) - 1;
+            }
+            
+            // emit match-roll
+            socket.emit('match-roll', room, currRollArr);
+        }, spinTiming);
+        
     } else if(!straightChecker()) {
         errDisp("Invalid die selection! Please pick valid dice!");
     }
+    
+    
 };
 
 // restart game
@@ -297,6 +315,19 @@ let endTurn = () => {
     // IE - Possibly prevent "end turn" until user
     // has no moves left, show how much is needed
     // to catch up to current highest score.
+    
+    // TODO: if score is 0, prevent end turn unless
+    // there are no moves left OR current score >= 1000
+    
+    // disable endturn and roll buttons until
+    // after spinning animation
+    rollButton.disabled = true;
+    endTurnButton.disabled = true;
+    
+    setTimeout(() => {
+        rollButton.disabled = false;
+        endTurnButton.disabled = false;
+    }, spinTiming);
     
     // reset current roll to 0
     currRoll.innerHTML = "0";
@@ -417,3 +448,12 @@ let setTurn = () => {
             freeze(dieArray[i]);
     }
 };
+
+/* MARK: - Multiplayer Event Handlers - */
+// These essentially emit events to the server and call the local method
+let rollMulti = () => { socket.emit('roll', room); };
+let endTurnMulti = () => { socket.emit('end-turn', room); };
+let restartMulti = () => { socket.emit('restart', room); };
+let rollMultiHandler = () => { socket.on('return-roll', () => { roll(); }); };
+let endTurnMultiHandler = () => { socket.on('return-end-turn', () => { endTurn(); }); };
+let restartMultiHandler = () => { socket.on('return-restart', () => { restart(); }); };

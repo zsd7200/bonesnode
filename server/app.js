@@ -71,6 +71,16 @@ io.on('connection', (socket) => {
     io.to(room).emit('update-scoreboard', returnData);
   };
 
+  // Dice.js one-liners
+  socket.on('setup-multi', (rand) => { io.to(socket.id).emit('setup-multi-true', rand); });
+  socket.on('match-roll', (room, currRollArr) => { io.to(room).emit('return-match-roll', currRollArr); });
+  socket.on('select-multi', (room, dieId, num) => { io.to(room).emit('return-select-multi', dieId, num); });
+
+  // Game.js one-liners
+  socket.on('roll', (room) => { io.to(room).emit('return-roll'); });
+  socket.on('end-turn', (room) => { io.to(room).emit('return-end-turn'); });
+  socket.on('restart', (room) => { io.to(room).emit('return-restart'); });
+
   // hosting a room
   socket.on('create', (nick) => {
     const room = IDgen();

@@ -32,7 +32,11 @@ const diceSrcD = [
     "assets/img/dice/d/6.webp",
 ];
 
-const diceAlt = ["one", "two", "three", "four", "five", "six"];
+const diceAlt = ["1", "2", "3", "4", "5", "6"];
+const intervalTiming = 75;
+const spinTiming = 500;
+// 75ms for interval is arbitrary, BUT
+// 500 ms for timeout is related to spin timing in CSS
 
 /* MARK: - Colors - */
 const bgColorL = "rgb(255, 255, 255)";
@@ -66,6 +70,9 @@ let rolls = [];
 let scores = [];
 let playerNames = [];
 let scoreboardTrs = [];
+let currRollArr = [];
+let currSelecArr = [];
+let currPrevArr = [];
 
 /* MARK: - Score Constants - */
 const backwardScore = -100;
@@ -74,7 +81,7 @@ const minScore = 1000;
 const scoreGoal = 10000;
 
 /* MARK: - Global DOM Variables - */
-let rollButton, endTurnButton, restartButton, error, currRoll;
+let diceContainer, rollButton, endTurnButton, restartButton, error, currRoll;
 
 /* MARK: - Other Variables - */
 let darkMode = false;
@@ -83,7 +90,8 @@ let endgame = false;
 let currPlayer = 0;
 let playerId = 0;               // this is different per each connected client
 let winnerIndex = -1;
-let socket;
+let isMultiplayer = false;
+let socket, room;
 
 /* MARK: - Helper Functions - */
 // random int
@@ -134,13 +142,21 @@ let errDisp = (str = " ", stayOnScreen = false) => {
 };
 
 // update roll score on click
-let updateRollScore = () => {
-    // backup rolls array
-    let rollCopy = [...rolls];
+let updateRollScore = (num = -1) => {
     
-    // call scorecalc on die selection, then reset rolls to the backup
-    currRoll.innerHTML = scoreCalc();
-    rolls = rollCopy;
+    if(num == -1) {
+        // backup rolls array
+        let rollCopy = [...rolls];
+        let currScore = scoreCalc();
+        
+        // call scorecalc on die selection, then reset rolls to the backup
+        currRoll.innerHTML = currScore;
+        rolls = rollCopy;
+        
+        // return currScore in case
+        return currScore;
+    } else 
+        currRoll.innerHTML = num;
 };
 
 // highlight current player's name
@@ -152,8 +168,14 @@ let showCurrPlayer = (num = 0) => {
                 scoreboardTrs[i].children[j].style.fontWeight = "normal";
             }
         } else {
+            // change color based on if multiplayer or not
+            let color = (currPlayer == playerId && isMultiplayer) ? "blue" : "red";
+            
+            if(color == "blue")
+                errDisp("It's your turn!", true);
+            
             for(let j = 0; j < scoreboardTrs[i].children.length; j++) {
-                scoreboardTrs[i].children[j].style.color = "red";
+                scoreboardTrs[i].children[j].style.color = color;
                 scoreboardTrs[i].children[j].style.fontWeight = "bold";
             }
         }
