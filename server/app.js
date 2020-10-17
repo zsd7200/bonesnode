@@ -14,12 +14,22 @@ const port = process.env.PORT || process.env.NODE_PORT || 3000;
 const router = require('./router.js');
 
 // networking management
-let rooms = [];
-const playerData = [];
+const playerData = {
+  // Template Structure
+  /*
+    roomid: {
+        socketid: {
+            nickname: nick,
+            score: 0,
+        },
+    },
+    */
+};
 
 // random ID generator
 const IDgen = () => {
   let dupe = false;
+  const rooms = Object.keys(playerData);
   let id = Math.random().toString(36).substr(2, 6);
   // this generates a random value, converts to letters and numbers,
   // then gets the first 6 values after the decimal point
@@ -35,7 +45,6 @@ const IDgen = () => {
     }
   } while (dupe);
 
-  rooms.push(id);
   return id;
 };
 
@@ -57,12 +66,12 @@ io.on('connection', (socket) => {
     const nameData = [];
     const scoreData = [];
     const returnData = [];
+    const keys = Object.keys(playerData[room]);
 
-    for (let i = 0; i < playerData.length; i++) {
-      if (room === playerData[i].room_id) {
-        nameData.push(playerData[i].nickname);
-        scoreData.push(playerData[i].score);
-      }
+    // place name and score data into respective arrays
+    for (let i = 0; i < keys.length; i++) {
+      nameData.push(playerData[room][keys[i]].nickname);
+      scoreData.push(playerData[room][keys[i]].score);
     }
 
     returnData.push(nameData);
@@ -84,28 +93,33 @@ io.on('connection', (socket) => {
   // hosting a room
   socket.on('create', (nick) => {
     const room = IDgen();
-    const json = {
-      socket_id: socket.id,
-      room_id: room,
-      nickname: nick,
-      score: 0,
-    };
+
+    // create two new json objects to hold data
+    const playerInfo = {};
+
+    // initialize pd[room] as a blank array
+    playerData[room] = {};
+
+    playerInfo.nickname = nick;
+    playerInfo.score = 0;
+
+    // join room and push data to pd[room]
     socket.join(room);
-    playerData.push(json);
+    playerData[room][socket.id] = playerInfo;
     updateScoreboard(room);
     io.to(room).emit('room-id', room);
   });
 
   // joining a room
   socket.on('join', (nick, room) => {
-    const json = {
-      socket_id: socket.id,
-      room_id: room,
-      nickname: nick,
-      score: 0,
-    };
+    const playerInfo = {};
+    const rooms = Object.keys(playerData);
     let doesExist = false;
-    let players = 0;
+    const players = Object.keys(playerData[room]).length;
+
+    // fill json with data
+    playerInfo.nickname = nick;
+    playerInfo.score = 0;
 
     // make sure the room exists
     for (let i = 0; i < rooms.length; i++) {
@@ -115,55 +129,41 @@ io.on('connection', (socket) => {
       }
     }
 
-    // check if the room is full or not
-    for (let i = 0; i < playerData.length; i++) {
-      if (room === playerData[i].room_id) players++;
-
-      if (players === 10) break;
-    }
-
     if (doesExist && players < 10) {
       socket.join(room);
-      playerData.push(json);
+      playerData[room][socket.id] = playerInfo;
       io.to(socket.id).emit('join-success', players);
       updateScoreboard(room);
     } else if (!doesExist) io.to(socket.id).emit('error', 'Invalid room code. Please try again.');
-    else if (players <= 10) io.to(socket.id).emit('error', 'Room is full! Please try again later.');
+    else if (players >= 10) io.to(socket.id).emit('error', 'Room is full! Please try again later.');
     else io.to(socket.id).emit('error', 'Something went wrong. Please try again.');
   });
 
   // start game
-  socket.on('start', (room) => {
-    io.to(room).emit('start-game');
-  });
+  socket.on('start', (room) => { io.to(room).emit('start-game'); });
 
   // disconnecting
   socket.on('disconnect', () => {
     let room = '';
     let empty = false;
+    const rooms = Object.keys(playerData);
 
-    // loop through playerData to delete disconnected player
-    for (let i = 0; i < playerData.length; i++) {
-      if (socket.id === playerData[i].socket_id) {
-        room = playerData[i].room_id;
-        playerData.splice(i, 1);
-        break;
+    // delete disconnected player's data
+    for (let i = 0; i < rooms.length; i++) {
+      if (playerData[rooms[i]][socket.id]) {
+        delete playerData[rooms[i]][socket.id];
+
+        // check if room is empty
+        if (playerData[rooms[i]].length === 0) {
+          room = rooms[i];
+          empty = true;
+        }
       }
     }
 
-    // if playerData is empty, then rooms should
-    // be emptied out as well
-    // otherwise, check if there's anyone in the room or not
-    if (playerData.length !== 0) {
-      for (let i = 0; i < playerData.length; i++) {
-        if (room === playerData[i].room_id) break;
-        else empty = true;
-      }
-    } else rooms = [];
-
-    // remove empty room from rooms array
-    if (empty) rooms.splice(rooms.indexOf(room), 1);
-    else updateScoreboard(room);
+    // delete room if empty
+    if (!empty && room !== '') updateScoreboard(room);
+    else if (empty) delete playerData[room];
   });
 });
 
