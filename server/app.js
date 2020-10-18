@@ -97,7 +97,7 @@ io.on('connection', (socket) => {
     // create two new json objects to hold data
     const playerInfo = {};
 
-    // initialize pd[room] as a blank array
+    // initialize pd[room] as a blank object
     playerData[room] = {};
 
     playerInfo.nickname = nick;
@@ -132,7 +132,7 @@ io.on('connection', (socket) => {
     if (doesExist && players < 10) {
       socket.join(room);
       playerData[room][socket.id] = playerInfo;
-      io.to(socket.id).emit('join-success', players);
+      io.to(socket.id).emit('join-success', players, room);
       updateScoreboard(room);
     } else if (!doesExist) io.to(socket.id).emit('error', 'Invalid room code. Please try again.');
     else if (players >= 10) io.to(socket.id).emit('error', 'Room is full! Please try again later.');

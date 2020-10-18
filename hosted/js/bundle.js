@@ -47,7 +47,7 @@ var selectDie = function selectDie(die) {
   }
 
   updateRollScore(num);
-  if (num == -1) socket.emit('select-multi', room, dieId, num);
+  if (num == -1 && currPlayer == playerId) socket.emit('select-multi', room, dieId, num);
 }; // "freeze" dice by preventing interaction
 
 
@@ -58,6 +58,8 @@ var freeze = function freeze() {
 
   rollButton.disabled = true;
   endTurnButton.disabled = true;
+  console.log("freezing pid: " + playerId);
+  isFrozen = true;
 }; // "unfreeze" dice by reverting changes made in freeze
 
 
@@ -74,6 +76,8 @@ var unfreeze = function unfreeze() {
 
   rollButton.disabled = false;
   endTurnButton.disabled = false;
+  console.log("unfreezing pid: " + playerId);
+  isFrozen = false;
 };
 /* MARK: - Rerolling - */
 // reroll die with animation and handling for other background colors
@@ -140,7 +144,7 @@ var matchRollHandler = function matchRollHandler() {
         if (currRollArr[i] != -1) rerollFace(dieArray[i], currRollArr[i]);
       }
 
-      freeze();
+      if (!isFrozen) freeze();
     } // empty currRollArr
 
 
@@ -445,10 +449,11 @@ var scoreAdd = function scoreAdd(count) {
 
 
 var roll = function roll() {
+  var bypass = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
   // clear errDisp
   errDisp();
 
-  if (dieSelectValidation()) {
+  if (dieSelectValidation() || bypass) {
     var unselected = 0;
 
     if (allSelectCheck()) {
@@ -498,15 +503,19 @@ var roll = function roll() {
     } // match rolls for all players after spin animation
 
 
-    setTimeout(function () {
-      // parse title for int, subtract one, push to currRollArr
-      for (var _i2 = 0; _i2 < dieArray.length; _i2++) {
-        if (currPlayer == playerId) currRollArr[_i2] = parseInt(dieArray[_i2].title) - 1;
-      } // emit match-roll
+    if (isMultiplayer) {
+      setTimeout(function () {
+        // parse title for int, subtract one, push to currRollArr
+        for (var _i2 = 0; _i2 < dieArray.length; _i2++) {
+          if (currPlayer == playerId) currRollArr[_i2] = parseInt(dieArray[_i2].title) - 1;
+        } // emit match-roll
 
 
-      socket.emit('match-roll', room, currRollArr);
-    }, spinTiming);
+        if (currPlayer == playerId) {
+          socket.emit('match-roll', room, currRollArr);
+        }
+      }, spinTiming);
+    }
   } else if (!straightChecker()) {
     errDisp("Invalid die selection! Please pick valid dice!");
   }
@@ -550,10 +559,14 @@ var endTurn = function endTurn() {
   // after spinning animation
   rollButton.disabled = true;
   endTurnButton.disabled = true;
-  setTimeout(function () {
-    rollButton.disabled = false;
-    endTurnButton.disabled = false;
-  }, spinTiming); // reset current roll to 0
+
+  if (!isMultiplayer) {
+    setTimeout(function () {
+      rollButton.disabled = false;
+      endTurnButton.disabled = false;
+    }, spinTiming);
+  } // reset current roll to 0
+
 
   currRoll.innerHTML = "0"; // check if anyone is over the score goal
 
@@ -585,7 +598,12 @@ var endTurn = function endTurn() {
 
 
     currPlayer = currPlayer + 1 >= scores.length ? 0 : currPlayer + 1;
-    showCurrPlayer(currPlayer);
+    showCurrPlayer(currPlayer); // freeze everyone who isn't current player
+    // in multiplayer game
+
+    if (isMultiplayer) {
+      if (currPlayer == playerId && isFrozen) unfreeze();else if (!isFrozen) freeze();
+    }
 
     if (endgame && winnerIndex == currPlayer) {
       var highestScore = 0;
@@ -598,75 +616,28 @@ var endTurn = function endTurn() {
       } // display winner
 
 
-      errDisp("The winner is " + playerNames[winnerIndex] + "!", true); // disable roll and endturn buttons
+      errDisp("The winner is " + playerNames[winnerIndex] + "!", true); // display restart button
 
-      rollButton.disabled = true;
-      endTurnButton.disabled = true;
       restartButton.style.display = "block"; // freeze dice to prevent interactions
 
-      for (var _i5 = 0; _i5 < dieArray.length; _i5++) {
-        freeze(dieArray[_i5]);
-      }
+      freeze();
     }
 
-    for (var _i6 = 0; _i6 < dieArray.length; _i6++) {
-      dieArray[_i6].style.backgroundColor = bgColor;
-      reroll(dieArray[_i6]);
-    } // only run sound-related things if mute is off
+    for (var _i5 = 0; _i5 < dieArray.length; _i5++) {
+      dieArray[_i5].style.backgroundColor = bgColor;
+    } // pass in true to bypass dieSelectValidation
 
 
-    if (!mute) {
-      for (var _i7 = 0; _i7 < dieArray.length; _i7++) {
-        if (dieArray[_i7].style.backgroundColor == bgColor) unselected++;
-      }
-
-      switch (unselected) {
-        case 1:
-          rollSounds[0].currentTime = 0;
-          rollSounds[0].play();
-          break;
-
-        case 2:
-          rollSounds[1].currentTime = 0;
-          rollSounds[1].play();
-          break;
-
-        case 3:
-          rollSounds[2].currentTime = 0;
-          rollSounds[2].play();
-          break;
-
-        case 4:
-          rollSounds[3].currentTime = 0;
-          rollSounds[3].play();
-          break;
-
-        case 5:
-          rollSounds[4].currentTime = 0;
-          rollSounds[4].play();
-          break;
-
-        default:
-          rollSounds[5].currentTime = 0;
-          rollSounds[5].play();
-          break;
-      }
-    }
+    roll(true);
   } else if (allSelectCheck() && !straightChecker()) {
     // force player to reroll if all selected and not a straight
     errDisp("You must roll again!");
+    if (currPlayer == playerId) unfreeze();
     updateRollScore();
   }
 };
 /* MARK: - Multiplayer-Specific Functions - */
-// lock dice for everyone except whoever's turn it is
 
-
-var setTurn = function setTurn() {
-  for (var i = 0; i < diceContainer.children.length; i++) {
-    if (currPlayer == playerId) setupDie(dieArray[i]);else freeze(dieArray[i]);
-  }
-};
 /* MARK: - Multiplayer Event Handlers - */
 // These essentially emit events to the server and call the local method
 
@@ -742,8 +713,8 @@ window.onload = function () {
   /* MARK: - CORS Bypass for Audio - */
 
 
-  for (var _i8 = 0; _i8 < rollSounds.length; _i8++) {
-    rollSounds[_i8].crossOrigin = "anonymous";
+  for (var _i6 = 0; _i6 < rollSounds.length; _i6++) {
+    rollSounds[_i6].crossOrigin = "anonymous";
   }
   /* MARK: - Dark Mode - */
 
@@ -754,18 +725,18 @@ window.onload = function () {
         selected = [],
         prevSelected = [];
 
-    for (var _i9 = 0; _i9 < dieArray.length; _i9++) {
-      switch (dieArray[_i9].style.backgroundColor) {
+    for (var _i7 = 0; _i7 < dieArray.length; _i7++) {
+      switch (dieArray[_i7].style.backgroundColor) {
         case previouslySelectedColor:
-          prevSelected.push(_i9);
+          prevSelected.push(_i7);
           break;
 
         case selectedColor:
-          selected.push(_i9);
+          selected.push(_i7);
           break;
 
         case bgColor:
-          unselected.push(_i9);
+          unselected.push(_i7);
           break;
 
         default:
@@ -789,56 +760,56 @@ window.onload = function () {
 
     localButton.classList.toggle("dark-button"); // redraw dice
 
-    for (var _i10 = 0; _i10 < unselected.length; _i10++) {
-      dieArray[unselected[_i10]].style.backgroundColor = bgColor;
+    for (var _i8 = 0; _i8 < unselected.length; _i8++) {
+      dieArray[unselected[_i8]].style.backgroundColor = bgColor;
     }
 
-    for (var _i11 = 0; _i11 < selected.length; _i11++) {
-      dieArray[selected[_i11]].style.backgroundColor = selectedColor;
+    for (var _i9 = 0; _i9 < selected.length; _i9++) {
+      dieArray[selected[_i9]].style.backgroundColor = selectedColor;
     }
 
-    for (var _i12 = 0; _i12 < prevSelected.length; _i12++) {
-      dieArray[prevSelected[_i12]].style.backgroundColor = previouslySelectedColor;
+    for (var _i10 = 0; _i10 < prevSelected.length; _i10++) {
+      dieArray[prevSelected[_i10]].style.backgroundColor = previouslySelectedColor;
     } // toggle body's dark mode
 
 
     document.body.classList.toggle("dark-body"); // update scoreboard for dark mode
 
-    for (var _i13 = 0; _i13 < scoreboardTrs.length; _i13++) {
-      if (!(_i13 % 2)) {
-        scoreboardTrs[_i13].style.backgroundColor = darkMode ? trBgD : trBgL;
+    for (var _i11 = 0; _i11 < scoreboardTrs.length; _i11++) {
+      if (!(_i11 % 2)) {
+        scoreboardTrs[_i11].style.backgroundColor = darkMode ? trBgD : trBgL;
       }
 
       showCurrPlayer(currPlayer);
     } // handle toggling dark dice and changing their src images
 
 
-    for (var _i14 = 0; _i14 < dieArray.length; _i14++) {
-      dieArray[_i14].classList.toggle("dark-die");
+    for (var _i12 = 0; _i12 < dieArray.length; _i12++) {
+      dieArray[_i12].classList.toggle("dark-die");
 
-      switch (dieArray[_i14].title) {
+      switch (dieArray[_i12].title) {
         case "one":
-          dieArray[_i14].src = darkMode ? diceSrcD[0] : diceSrcL[0];
+          dieArray[_i12].src = darkMode ? diceSrcD[0] : diceSrcL[0];
           break;
 
         case "two":
-          dieArray[_i14].src = darkMode ? diceSrcD[1] : diceSrcL[1];
+          dieArray[_i12].src = darkMode ? diceSrcD[1] : diceSrcL[1];
           break;
 
         case "three":
-          dieArray[_i14].src = darkMode ? diceSrcD[2] : diceSrcL[2];
+          dieArray[_i12].src = darkMode ? diceSrcD[2] : diceSrcL[2];
           break;
 
         case "four":
-          dieArray[_i14].src = darkMode ? diceSrcD[3] : diceSrcL[3];
+          dieArray[_i12].src = darkMode ? diceSrcD[3] : diceSrcL[3];
           break;
 
         case "five":
-          dieArray[_i14].src = darkMode ? diceSrcD[4] : diceSrcL[4];
+          dieArray[_i12].src = darkMode ? diceSrcD[4] : diceSrcL[4];
           break;
 
         case "six":
-          dieArray[_i14].src = darkMode ? diceSrcD[5] : diceSrcL[5];
+          dieArray[_i12].src = darkMode ? diceSrcD[5] : diceSrcL[5];
           break;
       }
     } // swap between unicode moons
@@ -881,8 +852,8 @@ window.onload = function () {
       if (name.length <= 1) validName = false; // check if names are the same
       // TODO: fix this, it seems like playerNames is empty
 
-      for (var _i15 = 0; _i15 < playerNames.length; _i15++) {
-        if (name == playerNames[_i15]) {
+      for (var _i13 = 0; _i13 < playerNames.length; _i13++) {
+        if (name == playerNames[_i13]) {
           validName = false;
           break;
         }
@@ -891,11 +862,12 @@ window.onload = function () {
       if (validName) {
         // check and make sure there's enough characters and emit join
         if (joinIDval.length == 6) socket.emit('join', name, joinIDval);else errDisp("Please enter a 6-digit room ID.");
-        socket.on('join-success', function (pId) {
+        socket.on('join-success', function (pId, rm) {
           joinNick.disabled = true;
           joinID.disabled = true;
           joinButton.disabled = true;
           playerId = pId;
+          room = rm;
           errDisp("Joined game! Waiting to start...");
         });
       } else errDisp("Invalid name input. Please enter something else.");
@@ -926,10 +898,6 @@ window.onload = function () {
 
 
   hostButton.onclick = function () {
-    // set isMulti and apply button handlers
-    isMultiplayer = true;
-    applyButtonHandlers(); // call start
-
     socket.emit('start', room);
   };
   /* MARK: - Socket.io Handlers - */
@@ -950,11 +918,14 @@ window.onload = function () {
   }); // start game by displaying the game container
 
   socket.on('start-game', function () {
-    fade(landing, gameContainer);
-    showCurrPlayer(); //setTurn();
+    fade(landing, gameContainer); // set isMulti and apply button handlers
 
-    for (var _i16 = 0; _i16 < dieArray.length; _i16++) {
-      setupDie(dieArray[_i16]);
+    isMultiplayer = true;
+    applyButtonHandlers();
+    showCurrPlayer();
+
+    for (var _i14 = 0; _i14 < dieArray.length; _i14++) {
+      setupDie(dieArray[_i14]);
     }
   });
   /* MARK: - Local Play Menu Options - */
@@ -967,11 +938,11 @@ window.onload = function () {
     } // create new children
 
 
-    for (var _i17 = 0; _i17 < localPlayers.value; _i17++) {
+    for (var _i15 = 0; _i15 < localPlayers.value; _i15++) {
       var label = document.createElement("label");
       var input = document.createElement("input");
       var br = document.createElement("br");
-      var name = "nick" + _i17; // fill out data
+      var name = "nick" + _i15; // fill out data
 
       label.htmlFor = name;
       label.innerHTML = name + ": ";
@@ -994,14 +965,14 @@ window.onload = function () {
 
     if (localPlayers.value != 0) {
       // check for invalid input
-      for (var _i18 = 0; _i18 < nicknames.children.length; _i18++) {
-        if (nicknames.children[_i18].type == "text") {
-          if (nicknames.children[_i18].value.length <= 1) {
+      for (var _i16 = 0; _i16 < nicknames.children.length; _i16++) {
+        if (nicknames.children[_i16].type == "text") {
+          if (nicknames.children[_i16].value.length <= 1) {
             invalidInput = true;
           }
 
           for (var j = 0; j < nicknames.children.length; j++) {
-            if (_i18 != j && nicknames.children[_i18].value == nicknames.children[j].value) invalidInput = true;
+            if (_i16 != j && nicknames.children[_i16].value == nicknames.children[j].value) invalidInput = true;
           }
         }
       } // check for invalid name input
@@ -1010,9 +981,9 @@ window.onload = function () {
       if (invalidInput) {
         errDisp("Invalid name input!");
       } else {
-        for (var _i19 = 0; _i19 < nicknames.children.length; _i19++) {
-          if (nicknames.children[_i19].type == "text") {
-            playerNames.push(nicknames.children[_i19].value);
+        for (var _i17 = 0; _i17 < nicknames.children.length; _i17++) {
+          if (nicknames.children[_i17].type == "text") {
+            playerNames.push(nicknames.children[_i17].value);
             scores.push(0);
           }
         } // create the scoreboard and indicate current player
@@ -1030,8 +1001,8 @@ window.onload = function () {
 
     applyButtonHandlers(); // setup dice for single player
 
-    for (var _i20 = 0; _i20 < diceContainer.children.length; _i20++) {
-      setupDie(dieArray[_i20]);
+    for (var _i18 = 0; _i18 < diceContainer.children.length; _i18++) {
+      setupDie(dieArray[_i18]);
     }
   }; // function to create the scoreboard
 
@@ -1053,18 +1024,18 @@ window.onload = function () {
     headTr.appendChild(scoreTh);
     scoreboard.children[0].appendChild(headTr); // create elements to be appended to the scoreboard element
 
-    for (var _i21 = 0; _i21 < playerNames.length; _i21++) {
+    for (var _i19 = 0; _i19 < playerNames.length; _i19++) {
       var tr = document.createElement("tr");
       var name = document.createElement("td");
       var score = document.createElement("td");
-      tr.id = "player" + _i21;
-      if (!(_i21 % 2)) tr.style.backgroundColor = trBgL;
-      name.innerHTML = playerNames[_i21];
-      score.innerHTML = scores[_i21];
+      tr.id = "player" + _i19;
+      if (!(_i19 % 2)) tr.style.backgroundColor = trBgL;
+      name.innerHTML = playerNames[_i19];
+      score.innerHTML = scores[_i19];
       tr.appendChild(name);
       tr.appendChild(score);
       scoreboard.children[0].appendChild(tr);
-      scoreboardTrs.push(document.querySelector("#player" + _i21));
+      scoreboardTrs.push(document.querySelector("#player" + _i19));
     }
   };
   /* MARK: - In-Game Buttons - */
@@ -1144,6 +1115,7 @@ var playerId = 0; // this is different per each connected client
 
 var winnerIndex = -1;
 var isMultiplayer = false;
+var isFrozen = false;
 var socket, room;
 /* MARK: - Helper Functions - */
 // random int

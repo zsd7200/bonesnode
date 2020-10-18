@@ -188,11 +188,12 @@ window.onload = () => {
                 else
                     errDisp("Please enter a 6-digit room ID.");
                 
-                socket.on('join-success', (pId) => {
+                socket.on('join-success', (pId, rm) => {
                     joinNick.disabled = true;
                     joinID.disabled = true;
                     joinButton.disabled = true;
                     playerId = pId;
+                    room = rm;
                     errDisp("Joined game! Waiting to start...");
                 });
             } else
@@ -225,14 +226,7 @@ window.onload = () => {
     };
     
     // host button--starts the multiplayer game
-    hostButton.onclick = () => {
-        // set isMulti and apply button handlers
-        isMultiplayer = true;
-        applyButtonHandlers();
-        
-        // call start
-        socket.emit('start', room);
-    };
+    hostButton.onclick = () => { socket.emit('start', room); };
     
     /* MARK: - Socket.io Handlers - */
     // on successful join, show some more things
@@ -253,8 +247,11 @@ window.onload = () => {
     // start game by displaying the game container
     socket.on('start-game', () => {
         fade(landing, gameContainer); 
+        
+        // set isMulti and apply button handlers
+        isMultiplayer = true;
+        applyButtonHandlers();
         showCurrPlayer();
-        //setTurn();
         
         for(let i = 0; i < dieArray.length; i++) {
             setupDie(dieArray[i]);

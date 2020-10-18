@@ -32,7 +32,7 @@ let selectDie = (die, num = -1) => {
     
     updateRollScore(num);
     
-    if(num == -1)
+    if(num == -1 && currPlayer == playerId)
         socket.emit('select-multi', room, dieId, num);
 };
 
@@ -43,6 +43,9 @@ let freeze = () => {
     
     rollButton.disabled = true;
     endTurnButton.disabled = true;
+    
+    console.log("freezing pid: " + playerId);
+    isFrozen = true;
 };
 
 // "unfreeze" dice by reverting changes made in freeze
@@ -52,6 +55,9 @@ let unfreeze = () => {
     
     rollButton.disabled = false;
     endTurnButton.disabled = false;
+    
+    console.log("unfreezing pid: " + playerId);
+    isFrozen = false;
 };
 
 /* MARK: - Rerolling - */
@@ -123,7 +129,8 @@ let matchRollHandler = () => {
                     rerollFace(dieArray[i], currRollArr[i]);
             }
             
-            freeze();
+            if(!isFrozen)
+                freeze();
         }
         
         // empty currRollArr

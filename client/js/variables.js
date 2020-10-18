@@ -91,6 +91,7 @@ let currPlayer = 0;
 let playerId = 0;               // this is different per each connected client
 let winnerIndex = -1;
 let isMultiplayer = false;
+let isFrozen = false;
 let socket, room;
 
 /* MARK: - Helper Functions - */
