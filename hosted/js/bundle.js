@@ -722,6 +722,7 @@ window.onload = function () {
     var unselected = [],
         selected = [],
         prevSelected = [];
+    var buttons = document.querySelectorAll("button");
 
     for (var _i7 = 0; _i7 < dieArray.length; _i7++) {
       switch (dieArray[_i7].style.backgroundColor) {
@@ -748,66 +749,62 @@ window.onload = function () {
     bgColor = darkMode ? bgColorD : bgColorL;
     selectedColor = darkMode ? selectedColorD : selectedColorL;
     previouslySelectedColor = darkMode ? previouslySelectedColorD : previouslySelectedColorL; // change button colors based on mode
-    //rollButton.classList.toggle("game-button");
 
-    rollButton.classList.toggle("dark-button"); //endTurnButton.classList.toggle("game-button");
+    for (var _i8 = 0; _i8 < buttons.length; _i8++) {
+      buttons[_i8].classList.toggle("dark-button");
+    } // redraw dice
 
-    endTurnButton.classList.toggle("dark-button"); //restartButton.classList.toggle("game-button");
 
-    restartButton.classList.toggle("dark-button"); //localButton.classList.toggle("game-button");
-
-    localButton.classList.toggle("dark-button"); // redraw dice
-
-    for (var _i8 = 0; _i8 < unselected.length; _i8++) {
-      dieArray[unselected[_i8]].style.backgroundColor = bgColor;
+    for (var _i9 = 0; _i9 < unselected.length; _i9++) {
+      dieArray[unselected[_i9]].style.backgroundColor = bgColor;
     }
 
-    for (var _i9 = 0; _i9 < selected.length; _i9++) {
-      dieArray[selected[_i9]].style.backgroundColor = selectedColor;
+    for (var _i10 = 0; _i10 < selected.length; _i10++) {
+      dieArray[selected[_i10]].style.backgroundColor = selectedColor;
     }
 
-    for (var _i10 = 0; _i10 < prevSelected.length; _i10++) {
-      dieArray[prevSelected[_i10]].style.backgroundColor = previouslySelectedColor;
+    for (var _i11 = 0; _i11 < prevSelected.length; _i11++) {
+      dieArray[prevSelected[_i11]].style.backgroundColor = previouslySelectedColor;
     } // toggle body's dark mode
 
 
     document.body.classList.toggle("dark-body"); // update scoreboard for dark mode
 
-    for (var _i11 = 0; _i11 < scoreboardTrs.length; _i11++) {
-      if (!(_i11 % 2)) {
-        scoreboardTrs[_i11].style.backgroundColor = darkMode ? trBgD : trBgL;
+    for (var _i12 = 0; _i12 < scoreboardTrs.length; _i12++) {
+      if (!(_i12 % 2)) {
+        scoreboardTrs[_i12].style.backgroundColor = darkMode ? trBgD : trBgL;
       }
 
       showCurrPlayer(currPlayer);
     } // handle toggling dark dice and changing their src images
 
 
-    for (var _i12 = 0; _i12 < dieArray.length; _i12++) {
-      dieArray[_i12].classList.toggle("dark-die");
+    for (var _i13 = 0; _i13 < dieArray.length; _i13++) {
+      dieArray[_i13].classList.toggle("dark-die");
 
-      switch (dieArray[_i12].title) {
+      switch (dieArray[_i13].title) {
         case "1":
-          dieArray[_i12].src = darkMode ? diceSrcD[0] : diceSrcL[0];
+          dieArray[_i13].src = darkMode ? diceSrcD[0] : diceSrcL[0];
           break;
 
         case "2":
-          dieArray[_i12].src = darkMode ? diceSrcD[1] : diceSrcL[1];
+          dieArray[_i13].src = darkMode ? diceSrcD[1] : diceSrcL[1];
           break;
 
         case "3":
-          dieArray[_i12].src = darkMode ? diceSrcD[2] : diceSrcL[2];
+          dieArray[_i13].src = darkMode ? diceSrcD[2] : diceSrcL[2];
           break;
 
         case "4":
-          dieArray[_i12].src = darkMode ? diceSrcD[3] : diceSrcL[3];
+          dieArray[_i13].src = darkMode ? diceSrcD[3] : diceSrcL[3];
           break;
 
         case "5":
-          dieArray[_i12].src = darkMode ? diceSrcD[4] : diceSrcL[4];
+          dieArray[_i13].src = darkMode ? diceSrcD[4] : diceSrcL[4];
           break;
 
         case "6":
-          dieArray[_i12].src = darkMode ? diceSrcD[5] : diceSrcL[5];
+          dieArray[_i13].src = darkMode ? diceSrcD[5] : diceSrcL[5];
           break;
       }
     } // swap between unicode moons
@@ -850,8 +847,8 @@ window.onload = function () {
       if (name.length <= 1) validName = false; // check if names are the same
       // TODO: fix this, it seems like playerNames is empty
 
-      for (var _i13 = 0; _i13 < playerNames.length; _i13++) {
-        if (name == playerNames[_i13]) {
+      for (var _i14 = 0; _i14 < playerNames.length; _i14++) {
+        if (name == playerNames[_i14]) {
           validName = false;
           break;
         }
@@ -922,8 +919,8 @@ window.onload = function () {
     applyButtonHandlers();
     showCurrPlayer();
 
-    for (var _i14 = 0; _i14 < dieArray.length; _i14++) {
-      setupDie(dieArray[_i14]);
+    for (var _i15 = 0; _i15 < dieArray.length; _i15++) {
+      setupDie(dieArray[_i15]);
     }
   });
   /* MARK: - Local Play Menu Options - */
@@ -936,11 +933,11 @@ window.onload = function () {
     } // create new children
 
 
-    for (var _i15 = 0; _i15 < localPlayers.value; _i15++) {
+    for (var _i16 = 0; _i16 < localPlayers.value; _i16++) {
       var label = document.createElement("label");
       var input = document.createElement("input");
       var br = document.createElement("br");
-      var name = "nick" + _i15; // fill out data
+      var name = "nick" + _i16; // fill out data
 
       label.htmlFor = name;
       label.innerHTML = name + ": ";
@@ -963,14 +960,14 @@ window.onload = function () {
 
     if (localPlayers.value != 0) {
       // check for invalid input
-      for (var _i16 = 0; _i16 < nicknames.children.length; _i16++) {
-        if (nicknames.children[_i16].type == "text") {
-          if (nicknames.children[_i16].value.length <= 1) {
+      for (var _i17 = 0; _i17 < nicknames.children.length; _i17++) {
+        if (nicknames.children[_i17].type == "text") {
+          if (nicknames.children[_i17].value.length <= 1) {
             invalidInput = true;
           }
 
           for (var j = 0; j < nicknames.children.length; j++) {
-            if (_i16 != j && nicknames.children[_i16].value == nicknames.children[j].value) invalidInput = true;
+            if (_i17 != j && nicknames.children[_i17].value == nicknames.children[j].value) invalidInput = true;
           }
         }
       } // check for invalid name input
@@ -979,9 +976,9 @@ window.onload = function () {
       if (invalidInput) {
         errDisp("Invalid name input!");
       } else {
-        for (var _i17 = 0; _i17 < nicknames.children.length; _i17++) {
-          if (nicknames.children[_i17].type == "text") {
-            playerNames.push(nicknames.children[_i17].value);
+        for (var _i18 = 0; _i18 < nicknames.children.length; _i18++) {
+          if (nicknames.children[_i18].type == "text") {
+            playerNames.push(nicknames.children[_i18].value);
             scores.push(0);
           }
         } // create the scoreboard and indicate current player
@@ -999,8 +996,8 @@ window.onload = function () {
 
     applyButtonHandlers(); // setup dice for single player
 
-    for (var _i18 = 0; _i18 < diceContainer.children.length; _i18++) {
-      setupDie(dieArray[_i18]);
+    for (var _i19 = 0; _i19 < diceContainer.children.length; _i19++) {
+      setupDie(dieArray[_i19]);
     }
   }; // function to create the scoreboard
 
@@ -1022,18 +1019,18 @@ window.onload = function () {
     headTr.appendChild(scoreTh);
     scoreboard.children[0].appendChild(headTr); // create elements to be appended to the scoreboard element
 
-    for (var _i19 = 0; _i19 < playerNames.length; _i19++) {
+    for (var _i20 = 0; _i20 < playerNames.length; _i20++) {
       var tr = document.createElement("tr");
       var name = document.createElement("td");
       var score = document.createElement("td");
-      tr.id = "player" + _i19;
-      if (!(_i19 % 2)) tr.style.backgroundColor = trBgL;
-      name.innerHTML = playerNames[_i19];
-      score.innerHTML = scores[_i19];
+      tr.id = "player" + _i20;
+      if (!(_i20 % 2)) tr.style.backgroundColor = trBgL;
+      name.innerHTML = playerNames[_i20];
+      score.innerHTML = scores[_i20];
       tr.appendChild(name);
       tr.appendChild(score);
       scoreboard.children[0].appendChild(tr);
-      scoreboardTrs.push(document.querySelector("#player" + _i19));
+      scoreboardTrs.push(document.querySelector("#player" + _i20));
     }
   };
   /* MARK: - In-Game Buttons - */
@@ -1198,8 +1195,8 @@ var showCurrPlayer = function showCurrPlayer() {
       }
     } else {
       // change color based on if multiplayer or not
-      var color = currPlayer == playerId && isMultiplayer ? "blue" : "red";
-      if (color == "blue") errDisp("It's your turn!", true);
+      var color = currPlayer == playerId && isMultiplayer ? "steelblue" : "red";
+      if (color == "steelblue") errDisp("It's your turn!", true);
 
       for (var _j = 0; _j < scoreboardTrs[i].children.length; _j++) {
         scoreboardTrs[i].children[_j].style.color = color;

@@ -45,6 +45,8 @@ window.onload = () => {
     darkModeToggle.onclick = () => {
         // store colors to redraw after swapping modes
         let unselected = [], selected = [], prevSelected = [];
+        let buttons = document.querySelectorAll("button");
+        
         for(let i = 0; i < dieArray.length; i++) {
             switch(dieArray[i].style.backgroundColor) {
                 case previouslySelectedColor:
@@ -71,17 +73,8 @@ window.onload = () => {
         previouslySelectedColor = (darkMode) ? previouslySelectedColorD : previouslySelectedColorL;
         
         // change button colors based on mode
-        //rollButton.classList.toggle("game-button");
-        rollButton.classList.toggle("dark-button");
-        
-        //endTurnButton.classList.toggle("game-button");
-        endTurnButton.classList.toggle("dark-button");
-        
-        //restartButton.classList.toggle("game-button");
-        restartButton.classList.toggle("dark-button");
-        
-        //localButton.classList.toggle("game-button");
-        localButton.classList.toggle("dark-button");
+        for(let i = 0; i < buttons.length; i++)
+            buttons[i].classList.toggle("dark-button");
         
         // redraw dice
         for(let i = 0; i < unselected.length; i++)

@@ -66,7 +66,7 @@ td, th {
     margin: 0;
     padding: 0;
     cursor: pointer;
-    position: absolute;
+    position: fixed;
     top: calc(100% - 40px);
     left: calc(100% - 40px);
     transition: .5s;
@@ -135,6 +135,11 @@ button:disabled { background: #bdbdbd; }
 .dark-button:disabled { color: gray; background: #4d4b4b; }
 
 /* MARK: - Media Queries for different screen sizes - */
-@media only screen and (min-width: 1000px) {
+@media only screen and (max-width: 1000px) {
     .die { border-width: 10px; width: 24.9%; }
+}
+
+@media only screen and (max-width: 700px) {
+    #content { flex-direction: column; }
+    #left-column, #right-column { width: 100%; }
 }

@@ -170,9 +170,9 @@ let showCurrPlayer = (num = 0) => {
             }
         } else {
             // change color based on if multiplayer or not
-            let color = (currPlayer == playerId && isMultiplayer) ? "blue" : "red";
+            let color = (currPlayer == playerId && isMultiplayer) ? "steelblue" : "red";
             
-            if(color == "blue")
+            if(color == "steelblue")
                 errDisp("It's your turn!", true);
             
             for(let j = 0; j < scoreboardTrs[i].children.length; j++) {
