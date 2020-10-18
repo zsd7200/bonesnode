@@ -58,7 +58,6 @@ var freeze = function freeze() {
 
   rollButton.disabled = true;
   endTurnButton.disabled = true;
-  console.log("freezing pid: " + playerId);
   isFrozen = true;
 }; // "unfreeze" dice by reverting changes made in freeze
 
@@ -76,7 +75,6 @@ var unfreeze = function unfreeze() {
 
   rollButton.disabled = false;
   endTurnButton.disabled = false;
-  console.log("unfreezing pid: " + playerId);
   isFrozen = false;
 };
 /* MARK: - Rerolling - */
@@ -788,27 +786,27 @@ window.onload = function () {
       dieArray[_i12].classList.toggle("dark-die");
 
       switch (dieArray[_i12].title) {
-        case "one":
+        case "1":
           dieArray[_i12].src = darkMode ? diceSrcD[0] : diceSrcL[0];
           break;
 
-        case "two":
+        case "2":
           dieArray[_i12].src = darkMode ? diceSrcD[1] : diceSrcL[1];
           break;
 
-        case "three":
+        case "3":
           dieArray[_i12].src = darkMode ? diceSrcD[2] : diceSrcL[2];
           break;
 
-        case "four":
+        case "4":
           dieArray[_i12].src = darkMode ? diceSrcD[3] : diceSrcL[3];
           break;
 
-        case "five":
+        case "5":
           dieArray[_i12].src = darkMode ? diceSrcD[4] : diceSrcL[4];
           break;
 
-        case "six":
+        case "6":
           dieArray[_i12].src = darkMode ? diceSrcD[5] : diceSrcL[5];
           break;
       }

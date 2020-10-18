@@ -110,22 +110,22 @@ window.onload = () => {
             dieArray[i].classList.toggle("dark-die");
             
             switch(dieArray[i].title) {
-                case "one":
+                case "1":
                     dieArray[i].src = (darkMode) ? diceSrcD[0] : diceSrcL[0];
                     break;
-                case "two":
+                case "2":
                     dieArray[i].src = (darkMode) ? diceSrcD[1] : diceSrcL[1];
                     break;
-                case "three":
+                case "3":
                     dieArray[i].src = (darkMode) ? diceSrcD[2] : diceSrcL[2];
                     break;
-                case "four":
+                case "4":
                     dieArray[i].src = (darkMode) ? diceSrcD[3] : diceSrcL[3];
                     break;
-                case "five":
+                case "5":
                     dieArray[i].src = (darkMode) ? diceSrcD[4] : diceSrcL[4];
                     break;
-                case "six":
+                case "6":
                     dieArray[i].src = (darkMode) ? diceSrcD[5] : diceSrcL[5];
                     break;
             }

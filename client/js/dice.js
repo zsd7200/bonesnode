@@ -44,7 +44,6 @@ let freeze = () => {
     rollButton.disabled = true;
     endTurnButton.disabled = true;
     
-    console.log("freezing pid: " + playerId);
     isFrozen = true;
 };
 
@@ -56,7 +55,6 @@ let unfreeze = () => {
     rollButton.disabled = false;
     endTurnButton.disabled = false;
     
-    console.log("unfreezing pid: " + playerId);
     isFrozen = false;
 };
 
