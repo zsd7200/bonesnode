@@ -1,7 +1,7 @@
 /*
 GAME.JS
 
-Functions related to scoring and game-related elements.
+Functions related to scoring and game-related elements for both local and online multiplayer.
 */
 
 
@@ -14,22 +14,22 @@ let countDice = (checkWhite = false) => {
         if(dieArray[i].style.backgroundColor == selectedColor || (checkWhite == true && dieArray[i].style.backgroundColor != previouslySelectedColor)) {
             
             switch(dieArray[i].title) {
-                case "one":
+                case "1":
                     diceCount[0]++;
                     break;
-                case "two":
+                case "2":
                     diceCount[1]++;
                     break;
-                case "three":
+                case "3":
                     diceCount[2]++;
                     break;
-                case "four":
+                case "4":
                     diceCount[3]++;
                     break;
-                case "five":
+                case "5":
                     diceCount[4]++;
                     break;
-                case "six":
+                case "6":
                     diceCount[5]++;
                     break;
                     
@@ -211,8 +211,11 @@ let scoreAdd = (count) => {
 
 /* MARK: - Rolling, Restarting, Ending Turn - */
 // roll dice
-let roll = () => {
-    if(dieSelectValidation()) {
+let roll = (bypass = false) => {    
+    // clear errDisp
+    errDisp();
+    
+    if(dieSelectValidation() || bypass) {
         let unselected = 0;
         
         if(allSelectCheck()) {
@@ -257,9 +260,29 @@ let roll = () => {
                     break;
             }
         }
+        
+        // match rolls for all players after spin animation
+        if(isMultiplayer) {
+            setTimeout(() => {
+                // parse title for int, subtract one, push to currRollArr
+                for(let i = 0; i < dieArray.length; i++) {
+                    if(currPlayer == playerId)
+                        currRollArr[i] = parseInt(dieArray[i].title) - 1;
+                }
+                
+                // emit match-roll
+                if(currPlayer == playerId) {
+                    socket.emit('match-roll', room, currRollArr);
+                }
+                
+            }, spinTiming);
+        }
+        
     } else if(!straightChecker()) {
         errDisp("Invalid die selection! Please pick valid dice!");
     }
+    
+    
 };
 
 // restart game
@@ -297,6 +320,21 @@ let endTurn = () => {
     // IE - Possibly prevent "end turn" until user
     // has no moves left, show how much is needed
     // to catch up to current highest score.
+    
+    // TODO: if score is 0, prevent end turn unless
+    // there are no moves left OR current score >= 1000
+    
+    // disable endturn and roll buttons until
+    // after spinning animation
+    rollButton.disabled = true;
+    endTurnButton.disabled = true;
+    
+    if(!isMultiplayer) {
+        setTimeout(() => {
+            rollButton.disabled = false;
+            endTurnButton.disabled = false;
+        }, spinTiming);
+    }
     
     // reset current roll to 0
     currRoll.innerHTML = "0";
@@ -338,6 +376,15 @@ let endTurn = () => {
         currPlayer = ((currPlayer + 1) >= scores.length) ? 0 : (currPlayer + 1);
         showCurrPlayer(currPlayer);
         
+        // freeze everyone who isn't current player
+        // in multiplayer game
+        if(isMultiplayer) {            
+            if(currPlayer == playerId && isFrozen)
+                unfreeze();
+            else if(!isFrozen)
+                freeze();
+        }
+        
         if(endgame && (winnerIndex == currPlayer)) {
             let highestScore = 0;
             
@@ -351,75 +398,35 @@ let endTurn = () => {
             // display winner
             errDisp("The winner is " + playerNames[winnerIndex] + "!", true);
             
-            // disable roll and endturn buttons
-            rollButton.disabled = true;
-            endTurnButton.disabled = true;
+            // display restart button
             restartButton.style.display = "block";
             
             // freeze dice to prevent interactions
-            for(let i = 0; i < dieArray.length; i++) {
-                freeze(dieArray[i]);
-            }
+            freeze();
         }
     
-        for(let i = 0; i < dieArray.length; i++) {            
+        for(let i = 0; i < dieArray.length; i++)           
             dieArray[i].style.backgroundColor = bgColor;
-            reroll(dieArray[i]);
-        }
         
-        // only run sound-related things if mute is off
-        if(!mute) {
-            for(let i = 0; i < dieArray.length; i++) {
-                if(dieArray[i].style.backgroundColor == bgColor)
-                    unselected++;
-            }
-        
-            switch(unselected) {
-                case 1:
-                    rollSounds[0].currentTime = 0;
-                    rollSounds[0].play();
-                    break;
-                case 2:
-                    rollSounds[1].currentTime = 0;
-                    rollSounds[1].play();
-                    break;
-                case 3:
-                    rollSounds[2].currentTime = 0;
-                    rollSounds[2].play();
-                    break;
-                case 4:
-                    rollSounds[3].currentTime = 0;
-                    rollSounds[3].play();
-                    break;
-                case 5:
-                    rollSounds[4].currentTime = 0;
-                    rollSounds[4].play();
-                    break;
-                default:
-                    rollSounds[5].currentTime = 0;
-                    rollSounds[5].play();
-                    break;
-            }
-        }
+        // pass in true to bypass dieSelectValidation
+        roll(true);
+
     } else if(allSelectCheck() && !straightChecker()) { // force player to reroll if all selected and not a straight
         errDisp("You must roll again!");
+        
+        if(currPlayer == playerId)
+            unfreeze();
+        
         updateRollScore();
     }
 };
 
-/* MARK: - Other - */
-let showCurrPlayer = (num = 0) => {
-    for(let i = 0; i < scoreboardTrs.length; i++) {
-        if(i != num) {
-            for(let j = 0; j < scoreboardTrs[i].children.length; j++) {
-                scoreboardTrs[i].children[j].style.color = (darkMode) ? "white" : "black";
-                scoreboardTrs[i].children[j].style.fontWeight = "normal";
-            }
-        } else {
-            for(let j = 0; j < scoreboardTrs[i].children.length; j++) {
-                scoreboardTrs[i].children[j].style.color = "red";
-                scoreboardTrs[i].children[j].style.fontWeight = "bold";
-            }
-        }
-    }
-};
+/* MARK: - Multiplayer-Specific Functions - */
+/* MARK: - Multiplayer Event Handlers - */
+// These essentially emit events to the server and call the local method
+let rollMulti = () => { socket.emit('roll', room); };
+let endTurnMulti = () => { socket.emit('end-turn', room); };
+let restartMulti = () => { socket.emit('restart', room); };
+let rollMultiHandler = () => { socket.on('return-roll', () => { roll(); }); };
+let endTurnMultiHandler = () => { socket.on('return-end-turn', () => { endTurn(); }); };
+let restartMultiHandler = () => { socket.on('return-restart', () => { restart(); }); };
