@@ -92,9 +92,7 @@ io.on('connection', (socket) => {
 
   // Main.js one-liners
   socket.on('increment-players', (room) => {
-    let players = -1;
-
-    if (playerData[room]) players = Object.keys(playerData[room]).length;
+    const players = (playerData[room]) ? Object.keys(playerData[room]).length : -1;
 
     io.to(room).emit('update-players', players);
   });
