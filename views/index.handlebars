@@ -1,9 +1,12 @@
 <div id="content">
-    <div id="left-column">
-        <p id="error"> </p>
+    <div id="landing">
+        <h1>Bones</h1>
         
-        <div id="landing">
-            <h1>Bones</h1>
+        <div id="landing-content">
+            <div id="local-online-select">
+                <button id="local-game">Local Game</button>
+                <button id="online-game">Online Game</button>
+            </div>
             
             <div id="local-container">
                 <label for="local-players">Local Players: </label>
@@ -30,51 +33,107 @@
             </div>
             
             <div id="host-options">
-                <!--
-                <label for="max">Max Players: </label>
-                <input type="number" id="max" name="max" value=2 min=1 max=10><br>
-                -->
                 <label for="host-nick">Nickname: </label>
                 <input type="text" id="host-nick" name="host-nick" placeholder="Nickname" maxlength=12><br>
                 <p>Room ID: <span id="host-id">??????</span></p>
                 <button id="open-button">Open Room</button>
                 <button id="host-button" disabled>Start Game</button>
             </div>
-            
-            
         </div>
-
-        <div id="game">   
-            <div id="dice-container">
-                <img id="die-0" class="die" src="assets/img/dice/l/1.webp" alt="one" />
-                <img id="die-1" class="die" src="assets/img/dice/l/2.webp" alt="two" />
-                <img id="die-2" class="die" src="assets/img/dice/l/3.webp" alt="three" />
-                <img id="die-3" class="die" src="assets/img/dice/l/4.webp" alt="four" />
-                <img id="die-4" class="die" src="assets/img/dice/l/5.webp" alt="five" />
-                <img id="die-5" class="die" src="assets/img/dice/l/6.webp" alt="six" />
-            </div>
+    </div>
+    
+    <div id="game-content">
+        <div id="left-column">
+            <br>
             
-            <div id="game-button-container">
-                <button id="roll-button">Roll</button>
-                <button id="end-turn-button">End Turn</button>
-                <button id="restart-button">Restart Game</button>
+            <div id="game">   
+                <div id="dice-container">
+                    <img id="die-0" class="die" src="assets/img/dice/l/1.webp" alt="one" />
+                    <img id="die-1" class="die" src="assets/img/dice/l/2.webp" alt="two" />
+                    <img id="die-2" class="die" src="assets/img/dice/l/3.webp" alt="three" />
+                    <img id="die-3" class="die" src="assets/img/dice/l/4.webp" alt="four" />
+                    <img id="die-4" class="die" src="assets/img/dice/l/5.webp" alt="five" />
+                    <img id="die-5" class="die" src="assets/img/dice/l/6.webp" alt="six" />
+                </div>
+                
+                <div id="game-button-container">
+                    <button id="roll-button">Roll</button>
+                    <button id="end-turn-button">End Turn</button>
+                    <button id="restart-button">Restart Game</button>
+                </div>
+                
+                <div id="roll-info">
+                    <p>Current Roll: <span id="curr-roll">0</span></p>
+                </div>
             </div>
-            
-            <div id="roll-info">
-                <p>Current Roll: <span id="curr-roll">0</span></p>
+        </div>
+        
+        <div id="right-column">
+            <table id="scoreboard">
+                <tr>
+                    <th>Player</th>
+                    <th>Score</th>
+                </tr>
+            </table>
+        </div>
+        
+        <div id="rules">
+            <button id="close-rules-button">×</button>
+            <div id="rules-content">
+                <h1>Rules</h1>
+                <ul>
+                    <li>
+                        The goal of the game is to reach <i>10000</i> points.
+                    </li>
+                    
+                    <li>
+                        <i>Ones</i> and <i>Fives</i> are the only dice 
+                        worth anything on their own, being worth <i>100</i> 
+                        and <i>50</i> respectively.
+                    </li>
+                    
+                    <li>
+                        Three of any kind of dice (on the same roll) are worth <i>100 x [face value 
+                        of dice]</i>. For example, three <i>Fours</i> would be worth 
+                        <i>400</i> points. Three <i>Ones</i> are worth <i>1000</i> points. 
+                        For each extra dice rolled on the same turn, multiply the last value by 2. 
+                        For example, four <i>Fours</i> would be worth <i>800</i>, five <i>Fours</i> 
+                        would be worth <i>1600</i>, and six <i>Fours</i> would be worth <i>3200</i>.
+                    </li>
+                    
+                    <li>
+                        If your current score is <i>0</i>, you must score <i>1000</i> points 
+                        or higher for your score to be counted. Otherwise, ending your turn will 
+                        not grant any points.
+                    </li>
+                    
+                    <li>
+                        At least one die must be selected to continue your turn. If no valid dice 
+                        can be selected, you must end your turn. If no valid dice are currently selected 
+                        upon your turn ending, you will lose <i>100</i> points. If going back <i>100</i> 
+                        points puts your score below <i>1000</i>, your score drops down to <i>0</i>.
+                    </li>
+                    
+                    <li>
+                        If all dice are selected, you must roll again, unless you have rolled 
+                        a <i>Straight</i> (1, 2, 3, 4, 5, and 6 all in the same roll), which is worth 
+                        <i>1000</i> points.
+                    </li>
+                    
+                    <li>
+                        After a player reaches the goal of <i>10000</i> points, all other players have 
+                        only one roll to catch up to them. If another player surpasses the other player's score, 
+                        that now becomes the goal for the other players. The player with the highest score after 
+                        all players have taken their last roll is the winner.
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
     
-    <div id="right-column">
-        <table id="scoreboard">
-            <tr>
-                <th>Player</th>
-                <th>Score</th>
-            </tr>
-        </table>
-    </div>
+    <p id="error"> </p>
     
-    <button id="dark-mode-toggle">🌚</button>
-    <button id="sound-toggle">🔈</button>
+    <button id="dark-mode-toggle" title="Toggle Dark Mode">🌚</button>
+    <button id="sound-toggle" title="Toggle Sound">🔈</button>
+    <button id="rules-button" title="Show Rules">📖</button>
 </div>

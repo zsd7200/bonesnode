@@ -90,6 +90,15 @@ io.on('connection', (socket) => {
   socket.on('end-turn', (room) => { io.to(room).emit('return-end-turn'); });
   socket.on('restart', (room) => { io.to(room).emit('return-restart'); });
 
+  // Main.js one-liners
+  socket.on('increment-players', (room) => {
+    let players = -1;
+
+    if (playerData[room]) players = Object.keys(playerData[room]).length;
+
+    io.to(room).emit('update-players', players);
+  });
+
   // hosting a room
   socket.on('create', (nick) => {
     const room = IDgen();

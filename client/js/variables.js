@@ -35,8 +35,13 @@ const diceSrcD = [
 const diceAlt = ["1", "2", "3", "4", "5", "6"];
 const intervalTiming = 75;
 const spinTiming = 500;
+const matchTiming = (Math.floor(spinTiming / intervalTiming) * intervalTiming) + 5;
 // 75ms for interval is arbitrary, BUT
-// 500 ms for timeout is related to spin timing in CSS
+// 500ms for timeout is related to spin timing in CSS
+// 5ms is added to matchTiming just as a little buffer
+// matchTiming is created so there isn't much of an issue with matching
+// rolls between devices on slow connections--will hopefully make it 
+// seem a lot more fluid
 
 /* MARK: - Colors - */
 const bgColorL = "rgb(255, 255, 255)";
@@ -64,6 +69,20 @@ let rollSounds = [
     new Audio("assets/audio/roll6.wav")
 ];
 
+/* MARK: - Notice/Error Messages - */
+const yourTurnMsg = "It's your turn!";
+const lastTurnMsg = "This is your last turn! Make it count!";
+const joinedMsg = "Joined game! Waiting to start...";
+const rolledStraightMsg = "You rolled a straight! You must end your turn!";
+
+const invalidDieMsg = "Invalid die selection! Please pick valid dice!";
+const rollAgainMsg = "You must roll again!";
+const sixDigitMsg = "Please enter a 6-digit room ID.";
+const invalidNameMsg = "Invalid name input. Please enter something else.";
+const onePlayerMsg = "Must have at least one player!";
+const twoPlayersMsg = "Must have at least two players!";
+const roomErrMsg = "Unknown problem with room. Please create a new room.";
+
 /* MARK: - Global Arrays - */
 let dieArray = [];
 let rolls = []; 
@@ -89,6 +108,7 @@ let mute = false;
 let endgame = false;
 let currPlayer = 0;
 let playerId = 0;               // this is different per each connected client
+let players = 0;
 let winnerIndex = -1;
 let isMultiplayer = false;
 let isFrozen = false;
@@ -116,23 +136,42 @@ let fadeOut = (el) => {
     setTimeout(() => { el.style.display = "none"; }, 500);
 };
 
-let fadeIn = (el) => {
-    el.style.display = "block";
+let fadeIn = (el, displayType = "block") => {
+    el.style.display = displayType;
     setTimeout(() => { el.style.opacity = "100"; }, 50);
 };
 
 // error display
 let errDisp = (str = " ", stayOnScreen = false) => {
+    const empty = (str == " ") ? true : false;
+    const winnerMsg = (str.indexOf("winner") > 0) ? true : false;
+    const err = "<span style='color:red'>ERROR: </span>";
+    const notice = "<span style='color:steelblue'>NOTICE: </span>";
+    
     // reset error to default just to be safe
     error.innerHTML = " ";
     error.style.opacity = "0";
     
     // set to new stuff
-    error.innerHTML = str;
-    error.style.opacity = "100";
+    if(!empty && !winnerMsg) {
+        switch(str) {
+            default:
+                error.innerHTML = err + str;
+                break;
+            case yourTurnMsg:
+            case lastTurnMsg:
+            case joinedMsg:
+            case rolledStraightMsg:
+                error.innerHTML = notice + str;
+                break;
+        }
+    } else if (!empty && winnerMsg) {
+        error.innerHTML = notice + str;
+    }
     
+    error.style.opacity = "100";
     // fade out if stay on screen is true
-    if(!stayOnScreen) {
+    if(!stayOnScreen && !empty) {
         setTimeout(() => {
             error.style.opacity = "0";
             setTimeout(() => {
@@ -173,7 +212,7 @@ let showCurrPlayer = (num = 0) => {
             let color = (currPlayer == playerId && isMultiplayer) ? "steelblue" : "red";
             
             if(color == "steelblue")
-                errDisp("It's your turn!", true);
+                errDisp(yourTurnMsg, true);
             
             for(let j = 0; j < scoreboardTrs[i].children.length; j++) {
                 scoreboardTrs[i].children[j].style.color = color;

@@ -212,7 +212,7 @@ var dieSelectValidation = function dieSelectValidation() {
   var count = countDice();
 
   if (straightChecker()) {
-    errDisp("You rolled a straight! You must end your turn!");
+    errDisp(rolledStraightMsg);
     return false;
   } // check for illegal moves (2, 3, 4, 6)
 
@@ -512,10 +512,10 @@ var roll = function roll() {
         if (currPlayer == playerId) {
           socket.emit('match-roll', room, currRollArr);
         }
-      }, spinTiming);
+      }, matchTiming);
     }
   } else if (!straightChecker()) {
-    errDisp("Invalid die selection! Please pick valid dice!");
+    errDisp(invalidDieMsg);
   }
 }; // restart game
 
@@ -589,7 +589,7 @@ var endTurn = function endTurn() {
     scoreboardTrs[currPlayer].children[1].innerHTML = scores[currPlayer]; // if currPlayer has reached the goal
 
     if (scores[currPlayer] >= scoreGoal && endgame == false) {
-      errDisp("This is your last turn! Make it count!", true);
+      errDisp(lastTurnMsg, true);
       endgame = true;
       winnerIndex = currPlayer;
     } // increment player
@@ -629,7 +629,7 @@ var endTurn = function endTurn() {
     roll(true);
   } else if (allSelectCheck() && !straightChecker()) {
     // force player to reroll if all selected and not a straight
-    errDisp("You must roll again!");
+    errDisp(rollAgainMsg);
     if (currPlayer == playerId) unfreeze();
     updateRollScore();
   }
@@ -654,7 +654,7 @@ var restartMulti = function restartMulti() {
 
 var rollMultiHandler = function rollMultiHandler() {
   socket.on('return-roll', function () {
-    roll();
+    roll(false);
   });
 };
 
@@ -679,6 +679,8 @@ Loads DOM elements upon window load, handles input, handles dark mode, and more.
 window.onload = function () {
   /* MARK: - DOM Elements - */
   var landing = document.querySelector("#landing");
+  var rules = document.querySelector("#rules");
+  var localOnlineSelect = document.querySelector("#local-online-select");
   var localContainer = document.querySelector("#local-container");
   var localPlayers = document.querySelector("#local-players");
   var nicknames = document.querySelector("#local-nicks");
@@ -703,6 +705,8 @@ window.onload = function () {
   currRoll = document.querySelector("#curr-roll");
   var darkModeToggle = document.querySelector("#dark-mode-toggle");
   var soundToggle = document.querySelector("#sound-toggle");
+  var rulesButton = document.querySelector("#rules-button");
+  var closeRulesButton = document.querySelector("#close-rules-button");
   /* MARK: - Dice Setup - */
 
   for (var i = 0; i < diceContainer.children.length; i++) {
@@ -714,6 +718,18 @@ window.onload = function () {
   for (var _i6 = 0; _i6 < rollSounds.length; _i6++) {
     rollSounds[_i6].crossOrigin = "anonymous";
   }
+  /* MARK: - Show Local/Online Options - */
+  // local
+
+
+  localOnlineSelect.children[0].onclick = function () {
+    fade(localOnlineSelect, localContainer);
+  }; // online
+
+
+  localOnlineSelect.children[1].onclick = function () {
+    fade(localOnlineSelect, roomButtons);
+  };
   /* MARK: - Dark Mode - */
 
 
@@ -765,10 +781,11 @@ window.onload = function () {
 
     for (var _i11 = 0; _i11 < prevSelected.length; _i11++) {
       dieArray[prevSelected[_i11]].style.backgroundColor = previouslySelectedColor;
-    } // toggle body's dark mode
+    } // toggle body and rules' dark modes
 
 
-    document.body.classList.toggle("dark-body"); // update scoreboard for dark mode
+    document.body.classList.toggle("dark-body");
+    rules.classList.toggle("dark-body"); // update scoreboard for dark mode
 
     for (var _i12 = 0; _i12 < scoreboardTrs.length; _i12++) {
       if (!(_i12 % 2)) {
@@ -819,6 +836,16 @@ window.onload = function () {
     mute = !mute;
     soundToggle.innerHTML = mute ? "🔊" : "🔈";
   };
+  /* MARK: - Hide/Show Rules - */
+
+
+  rulesButton.onclick = function () {
+    fadeIn(rules);
+  };
+
+  closeRulesButton.onclick = function () {
+    fadeOut(rules);
+  };
   /* MARK: - Networking - */
   // start socket.io
 
@@ -856,16 +883,17 @@ window.onload = function () {
 
       if (validName) {
         // check and make sure there's enough characters and emit join
-        if (joinIDval.length == 6) socket.emit('join', name, joinIDval);else errDisp("Please enter a 6-digit room ID.");
+        if (joinIDval.length == 6) socket.emit('join', name, joinIDval);else errDisp(sixDigitMsg);
         socket.on('join-success', function (pId, rm) {
           joinNick.disabled = true;
           joinID.disabled = true;
           joinButton.disabled = true;
           playerId = pId;
           room = rm;
-          errDisp("Joined game! Waiting to start...");
+          socket.emit('increment-players', room);
+          errDisp(joinedMsg);
         });
-      } else errDisp("Invalid name input. Please enter something else.");
+      } else errDisp(invalidNameMsg);
     };
   }; // host-room-button
 
@@ -873,7 +901,6 @@ window.onload = function () {
   roomButtons.children[1].onclick = function () {
     // fade old elements out and fade host options in
     fade(roomButtons, hostOptions);
-    fadeOut(localContainer);
 
     openButton.onclick = function () {
       hostNick.disabled = true; // call for room creation
@@ -887,13 +914,14 @@ window.onload = function () {
         openButton.disabled = true;
         hostButton.disabled = false;
         playerId = 0;
+        socket.emit('increment-players', room);
       });
     };
   }; // host button--starts the multiplayer game
 
 
   hostButton.onclick = function () {
-    socket.emit('start', room);
+    if (players >= 2) socket.emit('start', room);else errDisp(twoPlayersMsg);
   };
   /* MARK: - Socket.io Handlers - */
   // on successful join, show some more things
@@ -922,6 +950,13 @@ window.onload = function () {
     for (var _i15 = 0; _i15 < dieArray.length; _i15++) {
       setupDie(dieArray[_i15]);
     }
+  }); // update players variable (just used for chedcking if there's 
+  // more than 2 players to start a multiplayer game with, and doing
+  // room error checking on a rare chance there's some weird error, which
+  // happened once during testing)
+
+  socket.on('update-players', function (pVal) {
+    if (pVal == -1) errDisp(roomErrMsg);else players = pVal;
   });
   /* MARK: - Local Play Menu Options - */
   // create player entries based on value of localPlayers input
@@ -974,7 +1009,7 @@ window.onload = function () {
 
 
       if (invalidInput) {
-        errDisp("Invalid name input!");
+        errDisp(invalidNameMsg);
       } else {
         for (var _i18 = 0; _i18 < nicknames.children.length; _i18++) {
           if (nicknames.children[_i18].type == "text") {
@@ -991,7 +1026,7 @@ window.onload = function () {
         fade(landing, gameContainer);
         fadeIn(scoreboard);
       }
-    } else errDisp("Must have at least one player!"); // apply button handlers
+    } else errDisp(onePlayerMsg); // apply button handlers
 
 
     applyButtonHandlers(); // setup dice for single player
@@ -1037,7 +1072,9 @@ window.onload = function () {
 
 
   var applyButtonHandlers = function applyButtonHandlers() {
-    rollButton.onclick = isMultiplayer ? rollMulti : roll;
+    rollButton.onclick = isMultiplayer ? rollMulti : function () {
+      roll(false);
+    };
     endTurnButton.onclick = isMultiplayer ? endTurnMulti : endTurn;
     restartButton.onclick = isMultiplayer ? restartMulti : restart;
   };
@@ -1062,8 +1099,13 @@ var diceSrcL = ["assets/img/dice/l/1.webp", "assets/img/dice/l/2.webp", "assets/
 var diceSrcD = ["assets/img/dice/d/1.webp", "assets/img/dice/d/2.webp", "assets/img/dice/d/3.webp", "assets/img/dice/d/4.webp", "assets/img/dice/d/5.webp", "assets/img/dice/d/6.webp"];
 var diceAlt = ["1", "2", "3", "4", "5", "6"];
 var intervalTiming = 75;
-var spinTiming = 500; // 75ms for interval is arbitrary, BUT
-// 500 ms for timeout is related to spin timing in CSS
+var spinTiming = 500;
+var matchTiming = Math.floor(spinTiming / intervalTiming) * intervalTiming + 5; // 75ms for interval is arbitrary, BUT
+// 500ms for timeout is related to spin timing in CSS
+// 5ms is added to matchTiming just as a little buffer
+// matchTiming is created so there isn't much of an issue with matching
+// rolls between devices on slow connections--will hopefully make it 
+// seem a lot more fluid
 
 /* MARK: - Colors - */
 
@@ -1081,6 +1123,19 @@ var trBgD = "rgb(48, 48, 48)";
 /* MARK: - Roll Sounds - */
 
 var rollSounds = [new Audio("assets/audio/roll1.wav"), new Audio("assets/audio/roll2.wav"), new Audio("assets/audio/roll3.wav"), new Audio("assets/audio/roll4.wav"), new Audio("assets/audio/roll5.wav"), new Audio("assets/audio/roll6.wav")];
+/* MARK: - Notice/Error Messages - */
+
+var yourTurnMsg = "It's your turn!";
+var lastTurnMsg = "This is your last turn! Make it count!";
+var joinedMsg = "Joined game! Waiting to start...";
+var rolledStraightMsg = "You rolled a straight! You must end your turn!";
+var invalidDieMsg = "Invalid die selection! Please pick valid dice!";
+var rollAgainMsg = "You must roll again!";
+var sixDigitMsg = "Please enter a 6-digit room ID.";
+var invalidNameMsg = "Invalid name input. Please enter something else.";
+var onePlayerMsg = "Must have at least one player!";
+var twoPlayersMsg = "Must have at least two players!";
+var roomErrMsg = "Unknown problem with room. Please create a new room.";
 /* MARK: - Global Arrays - */
 
 var dieArray = [];
@@ -1108,6 +1163,7 @@ var endgame = false;
 var currPlayer = 0;
 var playerId = 0; // this is different per each connected client
 
+var players = 0;
 var winnerIndex = -1;
 var isMultiplayer = false;
 var isFrozen = false;
@@ -1139,7 +1195,8 @@ var fadeOut = function fadeOut(el) {
 };
 
 var fadeIn = function fadeIn(el) {
-  el.style.display = "block";
+  var displayType = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "block";
+  el.style.display = displayType;
   setTimeout(function () {
     el.style.opacity = "100";
   }, 50);
@@ -1149,14 +1206,34 @@ var fadeIn = function fadeIn(el) {
 var errDisp = function errDisp() {
   var str = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : " ";
   var stayOnScreen = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
-  // reset error to default just to be safe
+  var empty = str == " " ? true : false;
+  var winnerMsg = str.indexOf("winner") > 0 ? true : false;
+  var err = "<span style='color:red'>ERROR: </span>";
+  var notice = "<span style='color:steelblue'>NOTICE: </span>"; // reset error to default just to be safe
+
   error.innerHTML = " ";
   error.style.opacity = "0"; // set to new stuff
 
-  error.innerHTML = str;
+  if (!empty && !winnerMsg) {
+    switch (str) {
+      default:
+        error.innerHTML = err + str;
+        break;
+
+      case yourTurnMsg:
+      case lastTurnMsg:
+      case joinedMsg:
+      case rolledStraightMsg:
+        error.innerHTML = notice + str;
+        break;
+    }
+  } else if (!empty && winnerMsg) {
+    error.innerHTML = notice + str;
+  }
+
   error.style.opacity = "100"; // fade out if stay on screen is true
 
-  if (!stayOnScreen) {
+  if (!stayOnScreen && !empty) {
     setTimeout(function () {
       error.style.opacity = "0";
       setTimeout(function () {
@@ -1196,7 +1273,7 @@ var showCurrPlayer = function showCurrPlayer() {
     } else {
       // change color based on if multiplayer or not
       var color = currPlayer == playerId && isMultiplayer ? "steelblue" : "red";
-      if (color == "steelblue") errDisp("It's your turn!", true);
+      if (color == "steelblue") errDisp(yourTurnMsg, true);
 
       for (var _j = 0; _j < scoreboardTrs[i].children.length; _j++) {
         scoreboardTrs[i].children[_j].style.color = color;

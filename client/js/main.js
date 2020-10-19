@@ -7,6 +7,8 @@ Loads DOM elements upon window load, handles input, handles dark mode, and more.
 window.onload = () => {
     /* MARK: - DOM Elements - */
     let landing = document.querySelector("#landing");
+    let rules = document.querySelector("#rules");
+    let localOnlineSelect = document.querySelector("#local-online-select");
     let localContainer = document.querySelector("#local-container");
     let localPlayers = document.querySelector("#local-players");
     let nicknames = document.querySelector("#local-nicks");
@@ -31,6 +33,8 @@ window.onload = () => {
     currRoll = document.querySelector("#curr-roll");
     let darkModeToggle = document.querySelector("#dark-mode-toggle");
     let soundToggle = document.querySelector("#sound-toggle");
+    let rulesButton = document.querySelector("#rules-button");
+    let closeRulesButton = document.querySelector("#close-rules-button");
     
     /* MARK: - Dice Setup - */
     for(let i = 0; i < diceContainer.children.length; i++)
@@ -40,6 +44,14 @@ window.onload = () => {
     for(let i = 0; i < rollSounds.length; i++) {
         rollSounds[i].crossOrigin = "anonymous";
     }
+    
+    /* MARK: - Show Local/Online Options - */
+    // local
+    localOnlineSelect.children[0].onclick = () => { fade(localOnlineSelect, localContainer); };
+    
+    // online
+    localOnlineSelect.children[1].onclick = () => { fade(localOnlineSelect, roomButtons); };
+    
     
     /* MARK: - Dark Mode - */
     darkModeToggle.onclick = () => {
@@ -86,8 +98,9 @@ window.onload = () => {
         for(let i = 0; i < prevSelected.length; i++)
             dieArray[prevSelected[i]].style.backgroundColor = previouslySelectedColor;
         
-        // toggle body's dark mode
+        // toggle body and rules' dark modes
         document.body.classList.toggle("dark-body");
+        rules.classList.toggle("dark-body");
         
         // update scoreboard for dark mode
         for(let i = 0; i < scoreboardTrs.length; i++) {          
@@ -134,6 +147,10 @@ window.onload = () => {
         soundToggle.innerHTML = (mute) ? "🔊" : "🔈";
     };
     
+    /* MARK: - Hide/Show Rules - */
+    rulesButton.onclick = () => { fadeIn(rules); };
+    closeRulesButton.onclick = () => { fadeOut(rules); };
+    
     /* MARK: - Networking - */
     // start socket.io
     socket = io();
@@ -148,7 +165,7 @@ window.onload = () => {
     rollMultiHandler();
     endTurnMultiHandler();
     restartMultiHandler();
-    
+        
     // join-room-button
     roomButtons.children[0].onclick = () => {
         // fade old elements out and fade join options in
@@ -179,7 +196,7 @@ window.onload = () => {
                 if(joinIDval.length == 6)
                     socket.emit('join', name, joinIDval);
                 else
-                    errDisp("Please enter a 6-digit room ID.");
+                    errDisp(sixDigitMsg);
                 
                 socket.on('join-success', (pId, rm) => {
                     joinNick.disabled = true;
@@ -187,10 +204,11 @@ window.onload = () => {
                     joinButton.disabled = true;
                     playerId = pId;
                     room = rm;
-                    errDisp("Joined game! Waiting to start...");
+                    socket.emit('increment-players', room);
+                    errDisp(joinedMsg);
                 });
             } else
-                errDisp("Invalid name input. Please enter something else.");
+                errDisp(invalidNameMsg);
         };
     };
     
@@ -198,7 +216,6 @@ window.onload = () => {
     roomButtons.children[1].onclick = () => {
         // fade old elements out and fade host options in
         fade(roomButtons, hostOptions);
-        fadeOut(localContainer);
         
         openButton.onclick = () => {
             hostNick.disabled = true;
@@ -214,12 +231,18 @@ window.onload = () => {
                 openButton.disabled = true;
                 hostButton.disabled = false;
                 playerId = 0;
+                socket.emit('increment-players', room);
             });
         };
     };
-    
+        
     // host button--starts the multiplayer game
-    hostButton.onclick = () => { socket.emit('start', room); };
+    hostButton.onclick = () => { 
+        if(players >= 2)
+            socket.emit('start', room);
+        else
+            errDisp(twoPlayersMsg);
+    };
     
     /* MARK: - Socket.io Handlers - */
     // on successful join, show some more things
@@ -249,6 +272,17 @@ window.onload = () => {
         for(let i = 0; i < dieArray.length; i++) {
             setupDie(dieArray[i]);
         }
+    });
+    
+    // update players variable (just used for chedcking if there's 
+    // more than 2 players to start a multiplayer game with, and doing
+    // room error checking on a rare chance there's some weird error, which
+    // happened once during testing)
+    socket.on('update-players', (pVal) => {
+        if(pVal == -1)
+            errDisp(roomErrMsg);
+        else
+            players = pVal; 
     });
     
     /* MARK: - Local Play Menu Options - */
@@ -304,7 +338,7 @@ window.onload = () => {
             
             // check for invalid name input
             if(invalidInput) {
-                errDisp("Invalid name input!");
+                errDisp(invalidNameMsg);
             } else {
                 for(let i = 0; i < nicknames.children.length; i++) {
                     if(nicknames.children[i].type == "text") { 
@@ -323,7 +357,7 @@ window.onload = () => {
                 fadeIn(scoreboard);
             }
         } else
-            errDisp("Must have at least one player!");
+            errDisp(onePlayerMsg);
         
         // apply button handlers
         applyButtonHandlers();
@@ -373,7 +407,7 @@ window.onload = () => {
     
     /* MARK: - In-Game Buttons - */
     let applyButtonHandlers = () => {
-        rollButton.onclick = (isMultiplayer) ? rollMulti : roll;
+        rollButton.onclick = (isMultiplayer) ? rollMulti : () => { roll(false); };
         endTurnButton.onclick = (isMultiplayer) ? endTurnMulti : endTurn;
         restartButton.onclick = (isMultiplayer) ? restartMulti : restart;
     };

@@ -48,7 +48,7 @@ let dieSelectValidation = () => {
     let count = countDice();
     
     if(straightChecker()) {
-        errDisp("You rolled a straight! You must end your turn!");
+        errDisp(rolledStraightMsg);
         return false;
     }
     
@@ -215,7 +215,7 @@ let roll = (bypass = false) => {
     // clear errDisp
     errDisp();
     
-    if(dieSelectValidation() || bypass) {
+    if(dieSelectValidation() || bypass) {        
         let unselected = 0;
         
         if(allSelectCheck()) {
@@ -275,11 +275,11 @@ let roll = (bypass = false) => {
                     socket.emit('match-roll', room, currRollArr);
                 }
                 
-            }, spinTiming);
+            }, matchTiming);
         }
         
     } else if(!straightChecker()) {
-        errDisp("Invalid die selection! Please pick valid dice!");
+        errDisp(invalidDieMsg);
     }
     
     
@@ -367,7 +367,7 @@ let endTurn = () => {
         
         // if currPlayer has reached the goal
         if(scores[currPlayer] >= scoreGoal && endgame == false) {
-            errDisp("This is your last turn! Make it count!", true);
+            errDisp(lastTurnMsg, true);
             endgame = true;
             winnerIndex = currPlayer;
         }
@@ -412,7 +412,7 @@ let endTurn = () => {
         roll(true);
 
     } else if(allSelectCheck() && !straightChecker()) { // force player to reroll if all selected and not a straight
-        errDisp("You must roll again!");
+        errDisp(rollAgainMsg);
         
         if(currPlayer == playerId)
             unfreeze();
@@ -427,6 +427,6 @@ let endTurn = () => {
 let rollMulti = () => { socket.emit('roll', room); };
 let endTurnMulti = () => { socket.emit('end-turn', room); };
 let restartMulti = () => { socket.emit('restart', room); };
-let rollMultiHandler = () => { socket.on('return-roll', () => { roll(); }); };
+let rollMultiHandler = () => { socket.on('return-roll', () => { roll(false); }); };
 let endTurnMultiHandler = () => { socket.on('return-end-turn', () => { endTurn(); }); };
 let restartMultiHandler = () => { socket.on('return-restart', () => { restart(); }); };

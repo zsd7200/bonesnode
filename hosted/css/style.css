@@ -7,10 +7,8 @@ body {
   transition: .5s;
   overflow-x: hidden; }
 
-#host-id {
-  font-weight: bold;
-  font-size: 14pt;
-  font-family: monospace; }
+h1 {
+  text-align: center; }
 
 /* MARK: - Table/Scoreboard - */
 table {
@@ -27,7 +25,7 @@ td, th {
   width: 10%; }
 
 /* MARK: - Main content organization - */
-#content {
+#game-content {
   width: 100%;
   display: flex;
   justify-content: space-between; }
@@ -41,18 +39,53 @@ td, th {
   padding-right: 30px; }
 
 /* MARK: - Landing page elements - */
-#room-buttons, #local-container, #landing {
+#landing {
+  width: 100%; }
+
+#landing, #local-online-select {
   opacity: 100;
   transition: .5s; }
 
+#landing-content {
+  display: flex;
+  width: 100%;
+  justify-content: center; }
+
 /* MARK: - Hidden Elements - */
-#game, #host-options, #join-options, #scoreboard {
+#game, #host-options, #join-options, #scoreboard, #rules, #local-container, #room-buttons {
   display: none;
   opacity: 0;
   transition: .5s; }
 
+/* MARK: - Rules - */
+#rules {
+  width: 100%;
+  height: 100%;
+  background-color: white;
+  position: fixed;
+  top: 0;
+  z-index: 10; }
+
+#close-rules-button {
+  background: transparent;
+  border: none;
+  position: absolute;
+  left: calc(100% - 60px);
+  top: 30px;
+  cursor: pointer;
+  z-index: 11;
+  font-size: 28pt; }
+
+#rules-content {
+  padding-left: 15%;
+  padding-right: 15%;
+  width: 70%; }
+
+#rules-content ul li {
+  padding-top: 15px; }
+
 /* MARK: - Options/Toggle Buttons - */
-#dark-mode-toggle, #sound-toggle {
+#dark-mode-toggle, #sound-toggle, #rules-button {
   background: transparent;
   border: none;
   font-size: 18pt;
@@ -69,6 +102,9 @@ td, th {
 #sound-toggle {
   left: calc(100% - 80px); }
 
+#rules-button {
+  left: calc(100% - 120px); }
+
 /* MARK: - In-game Messages - */
 #roll-info {
   display: flex;
@@ -76,7 +112,14 @@ td, th {
 
 #error {
   transition: .5s;
-  opacity: 0; }
+  opacity: 0;
+  padding-left: 30px;
+  font-weight: bold; }
+
+#host-id {
+  font-weight: bold;
+  font-size: 14pt;
+  font-family: monospace; }
 
 /* MARK: - Dice Styling - */
 #dice-container {
@@ -86,11 +129,11 @@ td, th {
   width: 100%; }
 
 .die {
-  width: 33%;
-  height: 33%;
+  width: 24.9%;
+  height: 24.9%;
   margin-top: 3%;
   margin-bottom: 1.5%;
-  border: 5px solid black;
+  border: 12px solid black;
   background-color: white;
   border-radius: 10%; }
 
@@ -130,7 +173,7 @@ button:disabled {
 
 /* MARK: - Dark Mode Styling - */
 .dark-body {
-  background-color: black;
+  background-color: black !important;
   color: white; }
 
 .dark-die {
@@ -154,13 +197,10 @@ button:disabled {
   background: #4d4b4b; }
 
 /* MARK: - Media Queries for different screen sizes - */
-@media only screen and (max-width: 1000px) {
+@media only screen and (max-width: 800px) {
   .die {
-    border-width: 10px;
-    width: 24.9%; } }
-
-@media only screen and (max-width: 700px) {
-  #content {
+    border-width: 10px; }
+  #game-content {
     flex-direction: column; }
   #left-column, #right-column {
     width: 100%; } }
