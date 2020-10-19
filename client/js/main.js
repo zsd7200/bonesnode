@@ -393,7 +393,7 @@ window.onload = () => {
             
             tr.id = "player" + i;
             if(!(i % 2))
-                tr.style.backgroundColor = trBgL;
+                tr.style.backgroundColor = (darkMode) ? trBgD : trBgL;
             
             name.innerHTML = playerNames[i];
             score.innerHTML = scores[i];

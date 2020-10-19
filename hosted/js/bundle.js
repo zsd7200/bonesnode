@@ -1059,7 +1059,7 @@ window.onload = function () {
       var name = document.createElement("td");
       var score = document.createElement("td");
       tr.id = "player" + _i20;
-      if (!(_i20 % 2)) tr.style.backgroundColor = trBgL;
+      if (!(_i20 % 2)) tr.style.backgroundColor = darkMode ? trBgD : trBgL;
       name.innerHTML = playerNames[_i20];
       score.innerHTML = scores[_i20];
       tr.appendChild(name);
