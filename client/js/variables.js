@@ -38,7 +38,7 @@ const spinTiming = 500;
 const matchTiming = (Math.floor(spinTiming / intervalTiming) * intervalTiming) + 20;
 // 75ms for interval is arbitrary, BUT
 // 500ms for timeout is related to spin timing in CSS
-// 5ms is added to matchTiming just as a little buffer
+// 20ms is added to matchTiming just as a little buffer
 // matchTiming is created so there isn't much of an issue with matching
 // rolls between devices on slow connections--will hopefully make it 
 // seem a lot more fluid
