@@ -900,6 +900,7 @@ window.onload = function () {
           joinID.disabled = true;
           joinButton.disabled = true;
           playerId = pId;
+          currPlayer = playerId;
           room = rm;
           fadeIn(chatButton);
           socket.emit('increment-players', room);
@@ -954,7 +955,8 @@ window.onload = function () {
   }); // start game by displaying the game container
 
   socket.on('start-game', function () {
-    fade(landing, gameContainer); // set isMulti and apply button handlers
+    fade(landing, gameContainer);
+    currPlayer = 0; // set isMulti and apply button handlers
 
     isMultiplayer = true;
     applyButtonHandlers();
@@ -981,6 +983,7 @@ window.onload = function () {
     } else {
       fadeIn(messages);
       fadeIn(messageArrow);
+      chatButton.classList.remove("red");
     }
   }; // send message and reset value to empty
 
@@ -1039,7 +1042,9 @@ window.onload = function () {
     messagesUL.appendChild(infoLi);
     messagesUL.appendChild(msgLi); // scroll to bottom
 
-    messagesUL.scrollTop = messagesUL.scrollHeight;
+    messagesUL.scrollTop = messagesUL.scrollHeight; // change chat button to red to indicate a new message
+
+    if (messages.style.opacity != "100") chatButton.classList.add("red");
   });
   /* MARK: - Local Play Menu Options - */
   // create player entries based on value of localPlayers input

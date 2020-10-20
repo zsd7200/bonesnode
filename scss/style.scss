@@ -167,6 +167,15 @@ td, th {
     bottom: 0;
 }
 
+.red:after { 
+    content: '•';
+    color: red;
+    position: absolute;
+    left: 26px;
+    top: -12px;
+    font-size: 30pt;
+}
+
 /* MARK: - Options/Toggle Buttons - */
 #dark-mode-toggle, #sound-toggle, #rules-button, #chat-button {
     background: transparent;
@@ -254,4 +263,6 @@ button:disabled { background: #bdbdbd; }
     .die { border-width: 10px; }
     #game-content { flex-direction: column; }
     #left-column, #right-column { width: 100%; }
+    #messages { top: calc(100% - 460px); left: calc(100% - 340px); width: 300px; height: 400px; }
+    #messages-ul { height: 320px; }
 }

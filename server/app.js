@@ -175,7 +175,7 @@ io.on('connection', (socket) => {
 
   // chat message
   socket.on('send-chat', (room, msg) => {
-    const nick = playerData[room][socket.id].nickname;
+    const nick = (playerData[room][socket.id]) ? playerData[room][socket.id].nickname : '???';
     io.to(room).emit('receive-chat', msg, nick);
   });
 });

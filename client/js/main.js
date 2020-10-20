@@ -212,6 +212,7 @@ window.onload = () => {
                     joinID.disabled = true;
                     joinButton.disabled = true;
                     playerId = pId;
+                    currPlayer = playerId;
                     room = rm;
                     fadeIn(chatButton);
                     socket.emit('increment-players', room);
@@ -273,7 +274,8 @@ window.onload = () => {
     
     // start game by displaying the game container
     socket.on('start-game', () => {
-        fade(landing, gameContainer); 
+        fade(landing, gameContainer);
+        currPlayer = 0;
         
         // set isMulti and apply button handlers
         isMultiplayer = true;
@@ -305,6 +307,7 @@ window.onload = () => {
         } else {
             fadeIn(messages);
             fadeIn(messageArrow);
+            chatButton.classList.remove("red");
         }
     };
     
@@ -370,6 +373,10 @@ window.onload = () => {
         
         // scroll to bottom
         messagesUL.scrollTop = messagesUL.scrollHeight;
+        
+        // change chat button to red to indicate a new message
+        if(messages.style.opacity != "100")
+            chatButton.classList.add("red");
     });
     
     /* MARK: - Local Play Menu Options - */
