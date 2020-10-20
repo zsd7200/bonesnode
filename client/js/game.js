@@ -213,7 +213,8 @@ let scoreAdd = (count) => {
 // roll dice
 let roll = (bypass = false) => {    
     // clear errDisp
-    errDisp();
+    if(!endgame)
+        errDisp();
     
     if(dieSelectValidation() || bypass) {        
         let unselected = 0;
@@ -363,11 +364,13 @@ let endTurn = () => {
             scores[currPlayer] = 0;
         
         // update scoreboard text
-        scoreboardTrs[currPlayer].children[1].innerHTML = scores[currPlayer];
+        if(isMultiplayer && currPlayer == playerId)
+            socket.emit('send-score', room, scores[currPlayer], currPlayer);
+        else if(!isMultiplayer)
+            scoreboardTrs[currPlayer].children[1].innerHTML = scores[currPlayer];
         
         // if currPlayer has reached the goal
         if(scores[currPlayer] >= scoreGoal && endgame == false) {
-            errDisp(lastTurnMsg, true);
             endgame = true;
             winnerIndex = currPlayer;
         }
@@ -410,6 +413,14 @@ let endTurn = () => {
         
         // pass in true to bypass dieSelectValidation
         roll(true);
+        
+        // show lastTurnMsg
+        if(endgame && restartButton.style.display != "block") {
+            if(isMultiplayer && currPlayer == playerId)
+                errDisp(lastTurnMsg, true);
+            else if(!isMultiplayer)
+                errDisp(lastTurnMsg, true);
+        }
 
     } else if(allSelectCheck() && !straightChecker()) { // force player to reroll if all selected and not a straight
         errDisp(rollAgainMsg);
@@ -430,3 +441,9 @@ let restartMulti = () => { socket.emit('restart', room); };
 let rollMultiHandler = () => { socket.on('return-roll', () => { roll(false); }); };
 let endTurnMultiHandler = () => { socket.on('return-end-turn', () => { endTurn(); }); };
 let restartMultiHandler = () => { socket.on('return-restart', () => { restart(); }); };
+let updateScoreHandler = () => {
+    socket.on('receive-score', (score, player) => {
+        scores[player] = score;
+        scoreboardTrs[player].children[1].innerHTML = scores[player];
+    });
+};

@@ -1,2 +1,2 @@
-# [bonesnode](https://bonesgame.herokuapp.com/)
+# [bonesnode](http://www.bonesga.me/)
 Bones dice game, this time running on Node.

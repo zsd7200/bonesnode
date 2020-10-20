@@ -62,7 +62,7 @@ router(app);
 // networking via socket.io!
 io.on('connection', (socket) => {
   // helper functions
-  const updateScoreboard = (room) => {
+  const createScoreboard = (room) => {
     const nameData = [];
     const scoreData = [];
     const returnData = [];
@@ -77,7 +77,7 @@ io.on('connection', (socket) => {
     returnData.push(nameData);
     returnData.push(scoreData);
 
-    io.to(room).emit('update-scoreboard', returnData);
+    io.to(room).emit('create-scoreboard', returnData);
   };
 
   const stripSpecialChars = (str) => str.replace(/[^\w\s]/gi, '').toLowerCase();
@@ -115,7 +115,7 @@ io.on('connection', (socket) => {
     // join room and push data to pd[room]
     socket.join(room);
     playerData[room][socket.id] = playerInfo;
-    updateScoreboard(room);
+    createScoreboard(room);
     io.to(room).emit('room-id', room);
   });
 
@@ -144,7 +144,7 @@ io.on('connection', (socket) => {
       socket.join(room);
       playerData[room][socket.id] = playerInfo;
       io.to(socket.id).emit('join-success', playerIds.length, room);
-      updateScoreboard(room);
+      createScoreboard(room);
     } else if (!doesExist) io.to(socket.id).emit('error', 'Invalid room code. Please try again.');
     else if (nameDupe) io.to(socket.id).emit('error', 'Name is taken. Please enter another name.');
     else if (playerIds.length >= 10) io.to(socket.id).emit('error', 'Room is full! Please try again later.');
@@ -153,6 +153,14 @@ io.on('connection', (socket) => {
 
   // start game
   socket.on('start', (room) => { io.to(room).emit('start-game'); });
+
+  // sync scores between all clients in room
+  socket.on('send-score', (room, newScore, player) => {
+    const keys = Object.keys(playerData[room]);
+    playerData[room][keys[player]].score = newScore;
+
+    io.to(room).emit('receive-score', newScore, player);
+  });
 
   // disconnecting
   socket.on('disconnect', () => {
@@ -174,7 +182,7 @@ io.on('connection', (socket) => {
     }
 
     // delete room if empty
-    if (!empty && room !== '') updateScoreboard(room);
+    if (!empty && room !== '') createScoreboard(room);
     else if (empty) delete playerData[room];
   });
 

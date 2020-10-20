@@ -39,6 +39,7 @@ window.onload = () => {
     let messages = document.querySelector("#messages");
     let messageArrow = document.querySelector("#message-arrow");
     let messagesUL = document.querySelector("#messages-ul");
+    let chatInputContainer = document.querySelector("#chat-input-container");
     let chatInput = document.querySelector("#chat-input");
     
     /* MARK: - Dice Setup - */
@@ -110,6 +111,7 @@ window.onload = () => {
         document.body.classList.toggle("dark-body");
         rules.classList.toggle("dark-body");
         messages.classList.toggle("dark-body");
+        chatInputContainer.toggle("dark-body");
         
         // update scoreboard for dark mode
         for(let i = 0; i < scoreboardTrs.length; i++) {          
@@ -174,6 +176,7 @@ window.onload = () => {
     rollMultiHandler();
     endTurnMultiHandler();
     restartMultiHandler();
+    updateScoreHandler();
         
     // join-room-button
     roomButtons.children[0].onclick = () => {
@@ -248,7 +251,7 @@ window.onload = () => {
     
     /* MARK: - Socket.io Handlers - */
     // on successful join, show some more things
-    socket.on('update-scoreboard', (returnData) => {     
+    socket.on('create-scoreboard', (returnData) => {     
     
         // make copies of the returnData arrays
         playerNames = [...returnData[0]];

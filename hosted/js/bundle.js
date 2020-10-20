@@ -449,7 +449,7 @@ var scoreAdd = function scoreAdd(count) {
 var roll = function roll() {
   var bypass = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
   // clear errDisp
-  errDisp();
+  if (!endgame) errDisp();
 
   if (dieSelectValidation() || bypass) {
     var unselected = 0;
@@ -586,10 +586,9 @@ var endTurn = function endTurn() {
 
     if (scores[currPlayer] < minScore) scores[currPlayer] = 0; // update scoreboard text
 
-    scoreboardTrs[currPlayer].children[1].innerHTML = scores[currPlayer]; // if currPlayer has reached the goal
+    if (isMultiplayer && currPlayer == playerId) socket.emit('send-score', room, scores[currPlayer], currPlayer);else if (!isMultiplayer) scoreboardTrs[currPlayer].children[1].innerHTML = scores[currPlayer]; // if currPlayer has reached the goal
 
     if (scores[currPlayer] >= scoreGoal && endgame == false) {
-      errDisp(lastTurnMsg, true);
       endgame = true;
       winnerIndex = currPlayer;
     } // increment player
@@ -626,7 +625,11 @@ var endTurn = function endTurn() {
     } // pass in true to bypass dieSelectValidation
 
 
-    roll(true);
+    roll(true); // show lastTurnMsg
+
+    if (endgame && restartButton.style.display != "block") {
+      if (isMultiplayer && currPlayer == playerId) errDisp(lastTurnMsg, true);else if (!isMultiplayer) errDisp(lastTurnMsg, true);
+    }
   } else if (allSelectCheck() && !straightChecker()) {
     // force player to reroll if all selected and not a straight
     errDisp(rollAgainMsg);
@@ -667,6 +670,13 @@ var endTurnMultiHandler = function endTurnMultiHandler() {
 var restartMultiHandler = function restartMultiHandler() {
   socket.on('return-restart', function () {
     restart();
+  });
+};
+
+var updateScoreHandler = function updateScoreHandler() {
+  socket.on('receive-score', function (score, player) {
+    scores[player] = score;
+    scoreboardTrs[player].children[1].innerHTML = scores[player];
   });
 };
 /*
@@ -711,6 +721,7 @@ window.onload = function () {
   var messages = document.querySelector("#messages");
   var messageArrow = document.querySelector("#message-arrow");
   var messagesUL = document.querySelector("#messages-ul");
+  var chatInputContainer = document.querySelector("#chat-input-container");
   var chatInput = document.querySelector("#chat-input");
   /* MARK: - Dice Setup - */
 
@@ -796,7 +807,8 @@ window.onload = function () {
 
     document.body.classList.toggle("dark-body");
     rules.classList.toggle("dark-body");
-    messages.classList.toggle("dark-body"); // update scoreboard for dark mode
+    messages.classList.toggle("dark-body");
+    chatInputContainer.toggle("dark-body"); // update scoreboard for dark mode
 
     for (var _i13 = 0; _i13 < scoreboardTrs.length; _i13++) {
       if (!(_i13 % 2)) {
@@ -870,7 +882,8 @@ window.onload = function () {
 
   rollMultiHandler();
   endTurnMultiHandler();
-  restartMultiHandler(); // join-room-button
+  restartMultiHandler();
+  updateScoreHandler(); // join-room-button
 
   roomButtons.children[0].onclick = function () {
     // fade old elements out and fade join options in
@@ -933,7 +946,7 @@ window.onload = function () {
   // on successful join, show some more things
 
 
-  socket.on('update-scoreboard', function (returnData) {
+  socket.on('create-scoreboard', function (returnData) {
     // make copies of the returnData arrays
     playerNames = _toConsumableArray(returnData[0]);
     scores = _toConsumableArray(returnData[1]);
@@ -1193,7 +1206,7 @@ var diceSrcD = ["assets/img/dice/d/1.webp", "assets/img/dice/d/2.webp", "assets/
 var diceAlt = ["1", "2", "3", "4", "5", "6"];
 var intervalTiming = 75;
 var spinTiming = 500;
-var matchTiming = Math.floor(spinTiming / intervalTiming) * intervalTiming + 5; // 75ms for interval is arbitrary, BUT
+var matchTiming = Math.floor(spinTiming / intervalTiming) * intervalTiming + 20; // 75ms for interval is arbitrary, BUT
 // 500ms for timeout is related to spin timing in CSS
 // 5ms is added to matchTiming just as a little buffer
 // matchTiming is created so there isn't much of an issue with matching
@@ -1367,7 +1380,7 @@ var showCurrPlayer = function showCurrPlayer() {
     } else {
       // change color based on if multiplayer or not
       var color = currPlayer == playerId && isMultiplayer ? "steelblue" : "red";
-      if (color == "steelblue") errDisp(yourTurnMsg, true);
+      if (color == "steelblue" && !endgame) errDisp(yourTurnMsg, true);
 
       for (var _j = 0; _j < scoreboardTrs[i].children.length; _j++) {
         scoreboardTrs[i].children[_j].style.color = color;

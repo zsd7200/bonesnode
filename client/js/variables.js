@@ -35,7 +35,7 @@ const diceSrcD = [
 const diceAlt = ["1", "2", "3", "4", "5", "6"];
 const intervalTiming = 75;
 const spinTiming = 500;
-const matchTiming = (Math.floor(spinTiming / intervalTiming) * intervalTiming) + 5;
+const matchTiming = (Math.floor(spinTiming / intervalTiming) * intervalTiming) + 20;
 // 75ms for interval is arbitrary, BUT
 // 500ms for timeout is related to spin timing in CSS
 // 5ms is added to matchTiming just as a little buffer
@@ -212,7 +212,7 @@ let showCurrPlayer = (num = 0) => {
             // change color based on if multiplayer or not
             let color = (currPlayer == playerId && isMultiplayer) ? "steelblue" : "red";
             
-            if(color == "steelblue")
+            if(color == "steelblue" && !endgame)
                 errDisp(yourTurnMsg, true);
             
             for(let j = 0; j < scoreboardTrs[i].children.length; j++) {

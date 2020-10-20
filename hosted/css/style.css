@@ -137,7 +137,8 @@ td, th {
   padding: 0; }
 
 #messages-ul li {
-  padding: 4px; }
+  padding: 4px;
+  word-wrap: break-word; }
 
 #messages-ul li:nth-child(odd) {
   display: flex;
@@ -157,13 +158,17 @@ td, th {
 #messages-ul .odd {
   background-color: lightgray; }
 
+#chat-input-container {
+  position: absolute;
+  bottom: 0;
+  background-color: white;
+  width: 100%;
+  border-top: 2px solid gray; }
+
 #chat-input {
   border: none;
-  border-top: 2px solid gray;
   padding: 8px 10px;
-  width: 100%;
-  position: absolute;
-  bottom: 0; }
+  width: 90%; }
 
 .red:after {
   content: '•';
@@ -297,8 +302,14 @@ button:disabled {
     border-width: 10px; } }
 
 @media only screen and (max-width: 800px) {
+  #error {
+    position: absolute;
+    top: 0; }
+  #landing {
+    padding-top: 10px; }
   #game-content {
-    flex-direction: column; }
+    flex-direction: column;
+    padding-top: 10px; }
   #left-column, #right-column {
     width: 100%; }
   #messages {
