@@ -112,6 +112,7 @@ let players = 0;
 let winnerIndex = -1;
 let isMultiplayer = false;
 let isFrozen = false;
+let numMessages = 0;
 let socket, room;
 
 /* MARK: - Helper Functions - */

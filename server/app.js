@@ -172,6 +172,12 @@ io.on('connection', (socket) => {
     if (!empty && room !== '') updateScoreboard(room);
     else if (empty) delete playerData[room];
   });
+
+  // chat message
+  socket.on('send-chat', (room, msg) => {
+    const nick = playerData[room][socket.id].nickname;
+    io.to(room).emit('receive-chat', msg, nick);
+  });
 });
 
 http.listen(port, (err) => {

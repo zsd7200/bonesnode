@@ -89,8 +89,86 @@ td, th {
 
 #rules-content ul li { padding-top: 15px; }
 
+/* MARK: - Chat - */
+#chat-button, #messages {
+    transition: .5s;
+    opacity: 0;
+    display: none;
+}
+
+#messages {
+    position: fixed;
+    left: calc(100% - 502px);
+    top: calc(100% - 560px);
+    z-index: 9;
+    width: 400px;
+    height: 500px;
+    border: 2px solid gray;
+    border-radius: 20px;
+    padding: 0;
+    overflow: hidden;
+    background-color: white;
+    transition: .5s;
+}
+
+#messages h4 { 
+    width: 100%;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    padding-bottom: 5px;
+    padding-right: 2px;
+    text-align: center;
+    border-bottom: 2px solid gray;
+}
+
+#message-arrow {
+    content: '';
+    position: absolute;
+    top: calc(100% - 60px);
+    left: calc(100% - 140px);
+    margin-left: -20px;
+    width: 0;
+    height: 0;
+    border-top: solid 20px gray;
+    border-left: solid 20px transparent;
+    border-right: solid 20px transparent;
+    transition: .5s;
+    opacity: 0;
+    display: none;
+}
+
+#messages-ul {
+    overflow-y: scroll;
+    height: 425px;
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#messages-ul li { padding: 4px; }
+
+#messages-ul li:nth-child(odd) {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9pt;
+    padding-bottom: 0;
+}
+#messages-ul li .user { font-weight: bold; }
+#messages-ul li .curr-user { color: steelblue; }
+#messages-ul li .time { font-style: italic; }
+#messages-ul .odd { background-color: lightgray; }
+
+#chat-input {
+    border: none;
+    border-top: 2px solid gray;
+    padding: 8px 10px;
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+}
+
 /* MARK: - Options/Toggle Buttons - */
-#dark-mode-toggle, #sound-toggle, #rules-button {
+#dark-mode-toggle, #sound-toggle, #rules-button, #chat-button {
     background: transparent;
     border: none;
     font-size: 18pt;
@@ -106,6 +184,7 @@ td, th {
 }
 #sound-toggle { left: calc(100% - 80px); }
 #rules-button { left: calc(100% - 120px); }
+#chat-button { left: calc(100% - 160px); }
 
 /* MARK: - In-game Messages - */
 #roll-info { display: flex; justify-content: center; }
@@ -158,6 +237,7 @@ button:disabled { background: #bdbdbd; }
 /* MARK: - Dark Mode Styling - */
 .dark-body { background-color: black !important; color: white; }
 .dark-die { border-color: #1c1c1c; background-color: #303030; }
+.dark-odd { background-color: #2f2f2f !important; }
 
 .dark-button {
     color: white;

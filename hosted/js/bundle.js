@@ -707,6 +707,11 @@ window.onload = function () {
   var soundToggle = document.querySelector("#sound-toggle");
   var rulesButton = document.querySelector("#rules-button");
   var closeRulesButton = document.querySelector("#close-rules-button");
+  var chatButton = document.querySelector("#chat-button");
+  var messages = document.querySelector("#messages");
+  var messageArrow = document.querySelector("#message-arrow");
+  var messagesUL = document.querySelector("#messages-ul");
+  var chatInput = document.querySelector("#chat-input");
   /* MARK: - Dice Setup - */
 
   for (var i = 0; i < diceContainer.children.length; i++) {
@@ -739,6 +744,7 @@ window.onload = function () {
         selected = [],
         prevSelected = [];
     var buttons = document.querySelectorAll("button");
+    var oddChats = document.querySelectorAll(".odd");
 
     for (var _i7 = 0; _i7 < dieArray.length; _i7++) {
       switch (dieArray[_i7].style.backgroundColor) {
@@ -768,60 +774,65 @@ window.onload = function () {
 
     for (var _i8 = 0; _i8 < buttons.length; _i8++) {
       buttons[_i8].classList.toggle("dark-button");
+    }
+
+    for (var _i9 = 0; _i9 < oddChats.length; _i9++) {
+      oddChats[_i9].classList.toggle("dark-odd");
     } // redraw dice
 
 
-    for (var _i9 = 0; _i9 < unselected.length; _i9++) {
-      dieArray[unselected[_i9]].style.backgroundColor = bgColor;
+    for (var _i10 = 0; _i10 < unselected.length; _i10++) {
+      dieArray[unselected[_i10]].style.backgroundColor = bgColor;
     }
 
-    for (var _i10 = 0; _i10 < selected.length; _i10++) {
-      dieArray[selected[_i10]].style.backgroundColor = selectedColor;
+    for (var _i11 = 0; _i11 < selected.length; _i11++) {
+      dieArray[selected[_i11]].style.backgroundColor = selectedColor;
     }
 
-    for (var _i11 = 0; _i11 < prevSelected.length; _i11++) {
-      dieArray[prevSelected[_i11]].style.backgroundColor = previouslySelectedColor;
-    } // toggle body and rules' dark modes
+    for (var _i12 = 0; _i12 < prevSelected.length; _i12++) {
+      dieArray[prevSelected[_i12]].style.backgroundColor = previouslySelectedColor;
+    } // toggle dark mode for a few other elements
 
 
     document.body.classList.toggle("dark-body");
-    rules.classList.toggle("dark-body"); // update scoreboard for dark mode
+    rules.classList.toggle("dark-body");
+    messages.classList.toggle("dark-body"); // update scoreboard for dark mode
 
-    for (var _i12 = 0; _i12 < scoreboardTrs.length; _i12++) {
-      if (!(_i12 % 2)) {
-        scoreboardTrs[_i12].style.backgroundColor = darkMode ? trBgD : trBgL;
+    for (var _i13 = 0; _i13 < scoreboardTrs.length; _i13++) {
+      if (!(_i13 % 2)) {
+        scoreboardTrs[_i13].style.backgroundColor = darkMode ? trBgD : trBgL;
       }
 
       showCurrPlayer(currPlayer);
     } // handle toggling dark dice and changing their src images
 
 
-    for (var _i13 = 0; _i13 < dieArray.length; _i13++) {
-      dieArray[_i13].classList.toggle("dark-die");
+    for (var _i14 = 0; _i14 < dieArray.length; _i14++) {
+      dieArray[_i14].classList.toggle("dark-die");
 
-      switch (dieArray[_i13].title) {
+      switch (dieArray[_i14].title) {
         case "1":
-          dieArray[_i13].src = darkMode ? diceSrcD[0] : diceSrcL[0];
+          dieArray[_i14].src = darkMode ? diceSrcD[0] : diceSrcL[0];
           break;
 
         case "2":
-          dieArray[_i13].src = darkMode ? diceSrcD[1] : diceSrcL[1];
+          dieArray[_i14].src = darkMode ? diceSrcD[1] : diceSrcL[1];
           break;
 
         case "3":
-          dieArray[_i13].src = darkMode ? diceSrcD[2] : diceSrcL[2];
+          dieArray[_i14].src = darkMode ? diceSrcD[2] : diceSrcL[2];
           break;
 
         case "4":
-          dieArray[_i13].src = darkMode ? diceSrcD[3] : diceSrcL[3];
+          dieArray[_i14].src = darkMode ? diceSrcD[3] : diceSrcL[3];
           break;
 
         case "5":
-          dieArray[_i13].src = darkMode ? diceSrcD[4] : diceSrcL[4];
+          dieArray[_i14].src = darkMode ? diceSrcD[4] : diceSrcL[4];
           break;
 
         case "6":
-          dieArray[_i13].src = darkMode ? diceSrcD[5] : diceSrcL[5];
+          dieArray[_i14].src = darkMode ? diceSrcD[5] : diceSrcL[5];
           break;
       }
     } // swap between unicode moons
@@ -874,8 +885,8 @@ window.onload = function () {
       if (name.length <= 1) validName = false; // check if names are the same
       // TODO: fix this, it seems like playerNames is empty
 
-      for (var _i14 = 0; _i14 < playerNames.length; _i14++) {
-        if (name == playerNames[_i14]) {
+      for (var _i15 = 0; _i15 < playerNames.length; _i15++) {
+        if (name == playerNames[_i15]) {
           validName = false;
           break;
         }
@@ -890,6 +901,7 @@ window.onload = function () {
           joinButton.disabled = true;
           playerId = pId;
           room = rm;
+          fadeIn(chatButton);
           socket.emit('increment-players', room);
           errDisp(joinedMsg);
         });
@@ -911,6 +923,7 @@ window.onload = function () {
         hostID.innerHTML = data;
         room = data;
         fadeIn(scoreboard);
+        fadeIn(chatButton);
         openButton.disabled = true;
         hostButton.disabled = false;
         playerId = 0;
@@ -947,8 +960,8 @@ window.onload = function () {
     applyButtonHandlers();
     showCurrPlayer();
 
-    for (var _i15 = 0; _i15 < dieArray.length; _i15++) {
-      setupDie(dieArray[_i15]);
+    for (var _i16 = 0; _i16 < dieArray.length; _i16++) {
+      setupDie(dieArray[_i16]);
     }
   }); // update players variable (just used for chedcking if there's 
   // more than 2 players to start a multiplayer game with, and doing
@@ -957,6 +970,76 @@ window.onload = function () {
 
   socket.on('update-players', function (pVal) {
     if (pVal == -1) errDisp(roomErrMsg);else players = pVal;
+  });
+  /* MARK - Online Chat - */
+  // show/hide chat
+
+  chatButton.onclick = function () {
+    if (messages.style.opacity == "100") {
+      fadeOut(messages);
+      fadeOut(messageArrow);
+    } else {
+      fadeIn(messages);
+      fadeIn(messageArrow);
+    }
+  }; // send message and reset value to empty
+
+
+  chatInput.onkeyup = function (e) {
+    // keycode 13 is enter
+    if (e.keyCode == 13) {
+      socket.emit('send-chat', room, chatInput.value);
+      chatInput.value = "";
+    }
+  }; // on receiving a chat, show it in messages box
+
+
+  socket.on('receive-chat', function (msg, nick) {
+    // create necessary elements
+    var infoLi = document.createElement('li');
+    var userSp = document.createElement('span');
+    var timeSp = document.createElement('span');
+    var msgLi = document.createElement('li');
+    var msgSp = document.createElement('span'); // get new date and convert it to just the current local time
+
+    var d = new Date();
+    var timeStr = d.toTimeString().slice(0, d.toTimeString().indexOf(" ")); // create user span
+
+    userSp.innerHTML = nick;
+    userSp.classList.add("user");
+
+    if (nick == playerNames[playerId]) {
+      userSp.classList.add("curr-user");
+      userSp.innerHTML += " (You)";
+    } // create time span
+
+
+    timeSp.innerHTML = timeStr;
+    timeSp.classList.add("time"); // append to info li
+
+    infoLi.appendChild(userSp);
+    infoLi.appendChild(timeSp); // fill message span and append
+
+    msgSp.innerHTML = msg;
+    msgLi.appendChild(msgSp); // add classes for different backgrounds if numMessages is odd
+
+    if (!(numMessages % 2)) {
+      infoLi.classList.add("odd");
+      msgLi.classList.add("odd");
+
+      if (darkMode) {
+        infoLi.classList.add("dark-odd");
+        msgLi.classList.add("dark-odd");
+      }
+    } // increment numMessages
+
+
+    numMessages++; // append to messagesUL
+
+    messagesUL.appendChild(infoLi);
+    messagesUL.appendChild(msgLi); // scroll to bottom
+
+    messagesUL.scrollTop = messagesUL.scrollHeight;
   });
   /* MARK: - Local Play Menu Options - */
   // create player entries based on value of localPlayers input
@@ -968,11 +1051,11 @@ window.onload = function () {
     } // create new children
 
 
-    for (var _i16 = 0; _i16 < localPlayers.value; _i16++) {
+    for (var _i17 = 0; _i17 < localPlayers.value; _i17++) {
       var label = document.createElement("label");
       var input = document.createElement("input");
       var br = document.createElement("br");
-      var name = "nick" + _i16; // fill out data
+      var name = "nick" + _i17; // fill out data
 
       label.htmlFor = name;
       label.innerHTML = name + ": ";
@@ -995,14 +1078,14 @@ window.onload = function () {
 
     if (localPlayers.value != 0) {
       // check for invalid input
-      for (var _i17 = 0; _i17 < nicknames.children.length; _i17++) {
-        if (nicknames.children[_i17].type == "text") {
-          if (nicknames.children[_i17].value.length <= 1) {
+      for (var _i18 = 0; _i18 < nicknames.children.length; _i18++) {
+        if (nicknames.children[_i18].type == "text") {
+          if (nicknames.children[_i18].value.length <= 1) {
             invalidInput = true;
           }
 
           for (var j = 0; j < nicknames.children.length; j++) {
-            if (_i17 != j && nicknames.children[_i17].value == nicknames.children[j].value) invalidInput = true;
+            if (_i18 != j && nicknames.children[_i18].value == nicknames.children[j].value) invalidInput = true;
           }
         }
       } // check for invalid name input
@@ -1011,9 +1094,9 @@ window.onload = function () {
       if (invalidInput) {
         errDisp(invalidNameMsg);
       } else {
-        for (var _i18 = 0; _i18 < nicknames.children.length; _i18++) {
-          if (nicknames.children[_i18].type == "text") {
-            playerNames.push(nicknames.children[_i18].value);
+        for (var _i19 = 0; _i19 < nicknames.children.length; _i19++) {
+          if (nicknames.children[_i19].type == "text") {
+            playerNames.push(nicknames.children[_i19].value);
             scores.push(0);
           }
         } // create the scoreboard and indicate current player
@@ -1031,8 +1114,8 @@ window.onload = function () {
 
     applyButtonHandlers(); // setup dice for single player
 
-    for (var _i19 = 0; _i19 < diceContainer.children.length; _i19++) {
-      setupDie(dieArray[_i19]);
+    for (var _i20 = 0; _i20 < diceContainer.children.length; _i20++) {
+      setupDie(dieArray[_i20]);
     }
   }; // function to create the scoreboard
 
@@ -1054,18 +1137,18 @@ window.onload = function () {
     headTr.appendChild(scoreTh);
     scoreboard.children[0].appendChild(headTr); // create elements to be appended to the scoreboard element
 
-    for (var _i20 = 0; _i20 < playerNames.length; _i20++) {
+    for (var _i21 = 0; _i21 < playerNames.length; _i21++) {
       var tr = document.createElement("tr");
       var name = document.createElement("td");
       var score = document.createElement("td");
-      tr.id = "player" + _i20;
-      if (!(_i20 % 2)) tr.style.backgroundColor = darkMode ? trBgD : trBgL;
-      name.innerHTML = playerNames[_i20];
-      score.innerHTML = scores[_i20];
+      tr.id = "player" + _i21;
+      if (!(_i21 % 2)) tr.style.backgroundColor = darkMode ? trBgD : trBgL;
+      name.innerHTML = playerNames[_i21];
+      score.innerHTML = scores[_i21];
       tr.appendChild(name);
       tr.appendChild(score);
       scoreboard.children[0].appendChild(tr);
-      scoreboardTrs.push(document.querySelector("#player" + _i20));
+      scoreboardTrs.push(document.querySelector("#player" + _i21));
     }
   };
   /* MARK: - In-Game Buttons - */
@@ -1167,6 +1250,7 @@ var players = 0;
 var winnerIndex = -1;
 var isMultiplayer = false;
 var isFrozen = false;
+var numMessages = 0;
 var socket, room;
 /* MARK: - Helper Functions - */
 // random int

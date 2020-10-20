@@ -35,6 +35,11 @@ window.onload = () => {
     let soundToggle = document.querySelector("#sound-toggle");
     let rulesButton = document.querySelector("#rules-button");
     let closeRulesButton = document.querySelector("#close-rules-button");
+    let chatButton = document.querySelector("#chat-button");
+    let messages = document.querySelector("#messages");
+    let messageArrow = document.querySelector("#message-arrow");
+    let messagesUL = document.querySelector("#messages-ul");
+    let chatInput = document.querySelector("#chat-input");
     
     /* MARK: - Dice Setup - */
     for(let i = 0; i < diceContainer.children.length; i++)
@@ -50,14 +55,14 @@ window.onload = () => {
     localOnlineSelect.children[0].onclick = () => { fade(localOnlineSelect, localContainer); };
     
     // online
-    localOnlineSelect.children[1].onclick = () => { fade(localOnlineSelect, roomButtons); };
-    
+    localOnlineSelect.children[1].onclick = () => { fade(localOnlineSelect, roomButtons); };    
     
     /* MARK: - Dark Mode - */
     darkModeToggle.onclick = () => {
         // store colors to redraw after swapping modes
         let unselected = [], selected = [], prevSelected = [];
-        let buttons = document.querySelectorAll("button");
+        const buttons = document.querySelectorAll("button");
+        const oddChats = document.querySelectorAll(".odd");
         
         for(let i = 0; i < dieArray.length; i++) {
             switch(dieArray[i].style.backgroundColor) {
@@ -88,6 +93,9 @@ window.onload = () => {
         for(let i = 0; i < buttons.length; i++)
             buttons[i].classList.toggle("dark-button");
         
+        for(let i = 0; i < oddChats.length; i++)
+            oddChats[i].classList.toggle("dark-odd");
+        
         // redraw dice
         for(let i = 0; i < unselected.length; i++)
             dieArray[unselected[i]].style.backgroundColor = bgColor;
@@ -98,9 +106,10 @@ window.onload = () => {
         for(let i = 0; i < prevSelected.length; i++)
             dieArray[prevSelected[i]].style.backgroundColor = previouslySelectedColor;
         
-        // toggle body and rules' dark modes
+        // toggle dark mode for a few other elements
         document.body.classList.toggle("dark-body");
         rules.classList.toggle("dark-body");
+        messages.classList.toggle("dark-body");
         
         // update scoreboard for dark mode
         for(let i = 0; i < scoreboardTrs.length; i++) {          
@@ -204,6 +213,7 @@ window.onload = () => {
                     joinButton.disabled = true;
                     playerId = pId;
                     room = rm;
+                    fadeIn(chatButton);
                     socket.emit('increment-players', room);
                     errDisp(joinedMsg);
                 });
@@ -228,6 +238,7 @@ window.onload = () => {
                 hostID.innerHTML = data;
                 room = data;
                 fadeIn(scoreboard);
+                fadeIn(chatButton);
                 openButton.disabled = true;
                 hostButton.disabled = false;
                 playerId = 0;
@@ -283,6 +294,82 @@ window.onload = () => {
             errDisp(roomErrMsg);
         else
             players = pVal; 
+    });
+    
+    /* MARK - Online Chat - */
+    // show/hide chat
+    chatButton.onclick = () => {
+        if(messages.style.opacity == "100") {
+            fadeOut(messages);
+            fadeOut(messageArrow);
+        } else {
+            fadeIn(messages);
+            fadeIn(messageArrow);
+        }
+    };
+    
+    // send message and reset value to empty
+    chatInput.onkeyup = (e) => {
+        // keycode 13 is enter
+        if(e.keyCode == 13) {
+            socket.emit('send-chat', room, chatInput.value);
+            chatInput.value = "";
+        }
+    };
+    
+    // on receiving a chat, show it in messages box
+    socket.on('receive-chat', (msg, nick) => {
+        // create necessary elements
+        let infoLi = document.createElement('li');
+        let userSp = document.createElement('span');
+        let timeSp = document.createElement('span');
+        let msgLi = document.createElement('li');
+        let msgSp = document.createElement('span');
+        
+        // get new date and convert it to just the current local time
+        let d = new Date();
+        let timeStr = d.toTimeString().slice(0, d.toTimeString().indexOf(" "));
+        
+        // create user span
+        userSp.innerHTML = nick;
+        userSp.classList.add("user");
+        if(nick == playerNames[playerId]) {
+            userSp.classList.add("curr-user");
+            userSp.innerHTML += " (You)";
+        }
+        
+        // create time span
+        timeSp.innerHTML = timeStr;
+        timeSp.classList.add("time");
+        
+        // append to info li
+        infoLi.appendChild(userSp);
+        infoLi.appendChild(timeSp);
+        
+        // fill message span and append
+        msgSp.innerHTML = msg;
+        msgLi.appendChild(msgSp);
+        
+        // add classes for different backgrounds if numMessages is odd
+        if(!(numMessages % 2)) {
+            infoLi.classList.add("odd");
+            msgLi.classList.add("odd");
+            
+            if(darkMode) {
+                infoLi.classList.add("dark-odd");
+                msgLi.classList.add("dark-odd");
+            }
+        }
+        
+        // increment numMessages
+        numMessages++;
+        
+        // append to messagesUL
+        messagesUL.appendChild(infoLi);
+        messagesUL.appendChild(msgLi);
+        
+        // scroll to bottom
+        messagesUL.scrollTop = messagesUL.scrollHeight;
     });
     
     /* MARK: - Local Play Menu Options - */
