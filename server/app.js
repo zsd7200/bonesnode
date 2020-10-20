@@ -80,6 +80,8 @@ io.on('connection', (socket) => {
     io.to(room).emit('update-scoreboard', returnData);
   };
 
+  const stripSpecialChars = (str) => str.replace(/[^\w\s]/gi, '').toLowerCase();
+
   // Dice.js one-liners
   socket.on('setup-multi', (rand) => { io.to(socket.id).emit('setup-multi-true', rand); });
   socket.on('match-roll', (room, currRollArr) => { io.to(room).emit('return-match-roll', currRollArr); });
@@ -120,29 +122,32 @@ io.on('connection', (socket) => {
   // joining a room
   socket.on('join', (nick, room) => {
     const playerInfo = {};
-    const rooms = Object.keys(playerData);
     let doesExist = false;
-    const players = Object.keys(playerData[room]).length;
+    let nameDupe = false;
+    const playerIds = (playerData[room]) ? Object.keys(playerData[room]) : [];
 
     // fill json with data
     playerInfo.nickname = nick;
     playerInfo.score = 0;
 
     // make sure the room exists
-    for (let i = 0; i < rooms.length; i++) {
-      if (room === rooms[i]) {
-        doesExist = true;
-        break;
+    if (playerIds.length !== 0) doesExist = true;
+
+    if (doesExist) {
+      for (let i = 0; i < playerIds.length; i++) {
+        const currNick = playerData[room][playerIds[i]].nickname;
+        if (stripSpecialChars(nick) === stripSpecialChars(currNick)) nameDupe = true;
       }
     }
 
-    if (doesExist && players < 10) {
+    if (doesExist && !nameDupe && playerIds.length < 10) {
       socket.join(room);
       playerData[room][socket.id] = playerInfo;
-      io.to(socket.id).emit('join-success', players, room);
+      io.to(socket.id).emit('join-success', playerIds.length, room);
       updateScoreboard(room);
     } else if (!doesExist) io.to(socket.id).emit('error', 'Invalid room code. Please try again.');
-    else if (players >= 10) io.to(socket.id).emit('error', 'Room is full! Please try again later.');
+    else if (nameDupe) io.to(socket.id).emit('error', 'Name is taken. Please enter another name.');
+    else if (playerIds.length >= 10) io.to(socket.id).emit('error', 'Room is full! Please try again later.');
     else io.to(socket.id).emit('error', 'Something went wrong. Please try again.');
   });
 

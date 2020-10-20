@@ -881,18 +881,8 @@ window.onload = function () {
       // bring room code to lowercase and remove spaces
       var joinIDval = joinID.value.toLowerCase().replace(/\s/g, '');
       var name = joinNick.value;
-      var validName = true;
-      if (name.length <= 1) validName = false; // check if names are the same
-      // TODO: fix this, it seems like playerNames is empty
 
-      for (var _i15 = 0; _i15 < playerNames.length; _i15++) {
-        if (name == playerNames[_i15]) {
-          validName = false;
-          break;
-        }
-      }
-
-      if (validName) {
+      if (name.length > 1) {
         // check and make sure there's enough characters and emit join
         if (joinIDval.length == 6) socket.emit('join', name, joinIDval);else errDisp(sixDigitMsg);
         socket.on('join-success', function (pId, rm) {
@@ -916,20 +906,22 @@ window.onload = function () {
     fade(roomButtons, hostOptions);
 
     openButton.onclick = function () {
-      hostNick.disabled = true; // call for room creation
+      if (hostNick.value.length > 1) {
+        hostNick.disabled = true; // call for room creation
 
-      socket.emit('create', hostNick.value); // display room-id (called by emitting create) on-screen
+        socket.emit('create', hostNick.value); // display room-id (called by emitting create) on-screen
 
-      socket.on('room-id', function (data) {
-        hostID.innerHTML = data;
-        room = data;
-        fadeIn(scoreboard);
-        fadeIn(chatButton);
-        openButton.disabled = true;
-        hostButton.disabled = false;
-        playerId = 0;
-        socket.emit('increment-players', room);
-      });
+        socket.on('room-id', function (data) {
+          hostID.innerHTML = data;
+          room = data;
+          fadeIn(scoreboard);
+          fadeIn(chatButton);
+          openButton.disabled = true;
+          hostButton.disabled = false;
+          playerId = 0;
+          socket.emit('increment-players', room);
+        });
+      } else errDisp(invalidNameMsg);
     };
   }; // host button--starts the multiplayer game
 
@@ -962,8 +954,8 @@ window.onload = function () {
     applyButtonHandlers();
     showCurrPlayer();
 
-    for (var _i16 = 0; _i16 < dieArray.length; _i16++) {
-      setupDie(dieArray[_i16]);
+    for (var _i15 = 0; _i15 < dieArray.length; _i15++) {
+      setupDie(dieArray[_i15]);
     }
   }); // update players variable (just used for chedcking if there's 
   // more than 2 players to start a multiplayer game with, and doing
@@ -990,7 +982,7 @@ window.onload = function () {
 
   chatInput.onkeyup = function (e) {
     // keycode 13 is enter
-    if (e.keyCode == 13) {
+    if (e.keyCode == 13 && chatInput.value != "") {
       socket.emit('send-chat', room, chatInput.value);
       chatInput.value = "";
     }
@@ -1056,11 +1048,11 @@ window.onload = function () {
     } // create new children
 
 
-    for (var _i17 = 0; _i17 < localPlayers.value; _i17++) {
+    for (var _i16 = 0; _i16 < localPlayers.value; _i16++) {
       var label = document.createElement("label");
       var input = document.createElement("input");
       var br = document.createElement("br");
-      var name = "nick" + _i17; // fill out data
+      var name = "nick" + _i16; // fill out data
 
       label.htmlFor = name;
       label.innerHTML = name + ": ";
@@ -1083,27 +1075,35 @@ window.onload = function () {
 
     if (localPlayers.value != 0) {
       // check for invalid input
-      for (var _i18 = 0; _i18 < nicknames.children.length; _i18++) {
-        if (nicknames.children[_i18].type == "text") {
-          if (nicknames.children[_i18].value.length <= 1) {
-            invalidInput = true;
-          }
+      for (var _i17 = 0; _i17 < nicknames.children.length; _i17++) {
+        if (nicknames.children[_i17].type == "text") playerNames.push(nicknames.children[_i17].value);
+      }
 
-          for (var j = 0; j < nicknames.children.length; j++) {
-            if (_i18 != j && nicknames.children[_i18].value == nicknames.children[j].value) invalidInput = true;
+      for (var _i18 = 0; _i18 < playerNames.length; _i18++) {
+        // check length
+        if (playerNames[_i18].length <= 1) {
+          invalidInput = true;
+          break;
+        } // check if they're similar through stripSpecialChars
+
+
+        for (var j = 0; j < playerNames.length; j++) {
+          if (_i18 != j && stripSpecialChars(playerNames[_i18]) == stripSpecialChars(playerNames[j])) {
+            invalidInput = true;
+            break;
           }
         }
+
+        if (invalidInput) break;
       } // check for invalid name input
 
 
       if (invalidInput) {
         errDisp(invalidNameMsg);
+        playerNames = [];
       } else {
-        for (var _i19 = 0; _i19 < nicknames.children.length; _i19++) {
-          if (nicknames.children[_i19].type == "text") {
-            playerNames.push(nicknames.children[_i19].value);
-            scores.push(0);
-          }
+        for (var _i19 = 0; _i19 < playerNames.length; _i19++) {
+          scores.push(0);
         } // create the scoreboard and indicate current player
 
 
@@ -1122,6 +1122,11 @@ window.onload = function () {
     for (var _i20 = 0; _i20 < diceContainer.children.length; _i20++) {
       setupDie(dieArray[_i20]);
     }
+  }; // func to strip special characters for name checking
+
+
+  var stripSpecialChars = function stripSpecialChars(str) {
+    return str.replace(/[^\w\s]/gi, '').toLowerCase();
   }; // function to create the scoreboard
 
 

@@ -259,8 +259,11 @@ button:disabled { background: #bdbdbd; }
 .dark-button:disabled { color: gray; background: #4d4b4b; }
 
 /* MARK: - Media Queries for different screen sizes - */
-@media only screen and (max-width: 800px) {
+@media only screen and (max-width: 760px) {
     .die { border-width: 10px; }
+}
+
+@media only screen and (max-width: 800px) {
     #game-content { flex-direction: column; }
     #left-column, #right-column { width: 100%; }
     #messages { top: calc(100% - 460px); left: calc(100% - 340px); width: 300px; height: 400px; }

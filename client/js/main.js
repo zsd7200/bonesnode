@@ -186,21 +186,8 @@ window.onload = () => {
             // bring room code to lowercase and remove spaces
             let joinIDval = joinID.value.toLowerCase().replace(/\s/g, '');
             let name = joinNick.value;
-            let validName = true;
-
-            if(name.length <= 1)
-                validName = false;
-
-            // check if names are the same
-            // TODO: fix this, it seems like playerNames is empty
-            for(let i = 0; i < playerNames.length; i++) {
-                if(name == playerNames[i]) {
-                    validName = false;
-                    break;
-                }
-            }
             
-            if(validName) {
+            if(name.length > 1) {
                 // check and make sure there's enough characters and emit join
                 if(joinIDval.length == 6)
                     socket.emit('join', name, joinIDval);
@@ -229,22 +216,25 @@ window.onload = () => {
         fade(roomButtons, hostOptions);
         
         openButton.onclick = () => {
-            hostNick.disabled = true;
-            
-            // call for room creation
-            socket.emit('create', hostNick.value);
-            
-            // display room-id (called by emitting create) on-screen
-            socket.on('room-id', (data) => {
-                hostID.innerHTML = data;
-                room = data;
-                fadeIn(scoreboard);
-                fadeIn(chatButton);
-                openButton.disabled = true;
-                hostButton.disabled = false;
-                playerId = 0;
-                socket.emit('increment-players', room);
-            });
+            if(hostNick.value.length > 1) {
+                hostNick.disabled = true;
+                
+                // call for room creation
+                socket.emit('create', hostNick.value);
+                
+                // display room-id (called by emitting create) on-screen
+                socket.on('room-id', (data) => {
+                    hostID.innerHTML = data;
+                    room = data;
+                    fadeIn(scoreboard);
+                    fadeIn(chatButton);
+                    openButton.disabled = true;
+                    hostButton.disabled = false;
+                    playerId = 0;
+                    socket.emit('increment-players', room);
+                });
+            } else
+                errDisp(invalidNameMsg);
         };
     };
         
@@ -314,7 +304,7 @@ window.onload = () => {
     // send message and reset value to empty
     chatInput.onkeyup = (e) => {
         // keycode 13 is enter
-        if(e.keyCode == 13) {
+        if(e.keyCode == 13 && chatInput.value != "") {
             socket.emit('send-chat', room, chatInput.value);
             chatInput.value = "";
         }
@@ -418,28 +408,36 @@ window.onload = () => {
         if(localPlayers.value != 0) {            
             // check for invalid input
             for(let i = 0; i < nicknames.children.length; i++) {
-                if(nicknames.children[i].type == "text") {
-                    if(nicknames.children[i].value.length <= 1) {
+                if(nicknames.children[i].type == "text")
+                    playerNames.push(nicknames.children[i].value);
+            }
+            
+            for(let i = 0; i < playerNames.length; i++) {
+                // check length
+                if(playerNames[i].length <= 1) {
+                    invalidInput = true;
+                    break;
+                }
+                
+                // check if they're similar through stripSpecialChars
+                for(let j = 0; j < playerNames.length; j++) {
+                    if((i != j) && stripSpecialChars(playerNames[i]) == stripSpecialChars(playerNames[j])) {
                         invalidInput = true;
-                    }
-                    
-                    for(let j = 0; j < nicknames.children.length; j++) {
-                        if(i != j && nicknames.children[i].value == nicknames.children[j].value)
-                            invalidInput = true;
+                        break;
                     }
                 }
+                
+                if(invalidInput)
+                    break;
             }
             
             // check for invalid name input
             if(invalidInput) {
                 errDisp(invalidNameMsg);
+                playerNames = [];
             } else {
-                for(let i = 0; i < nicknames.children.length; i++) {
-                    if(nicknames.children[i].type == "text") { 
-                        playerNames.push(nicknames.children[i].value);
-                        scores.push(0);
-                    }
-                }
+                for(let i = 0; i < playerNames.length; i++)
+                    scores.push(0);
                 
                 // create the scoreboard and indicate current player
                 createScoreboard();
@@ -460,6 +458,9 @@ window.onload = () => {
         for(let i = 0; i < diceContainer.children.length; i++)
             setupDie(dieArray[i]);
     };
+    
+    // func to strip special characters for name checking
+    const stripSpecialChars = (str) => { return str.replace(/[^\w\s]/gi, '').toLowerCase(); };
     
     // function to create the scoreboard
     let createScoreboard = () => {

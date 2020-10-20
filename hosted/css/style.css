@@ -292,9 +292,11 @@ button:disabled {
   background: #4d4b4b; }
 
 /* MARK: - Media Queries for different screen sizes - */
-@media only screen and (max-width: 800px) {
+@media only screen and (max-width: 760px) {
   .die {
-    border-width: 10px; }
+    border-width: 10px; } }
+
+@media only screen and (max-width: 800px) {
   #game-content {
     flex-direction: column; }
   #left-column, #right-column {
