@@ -18,12 +18,17 @@ const playerData = {
   // Template Structure
   /*
     roomid: {
+        hasStarted: false,
         socketid: {
             nickname: nick,
             score: 0,
         },
+        socketid: {
+            nickname: nick,
+            score: 0,
+        },...
     },
-    */
+  */
 };
 
 // random ID generator
@@ -66,7 +71,10 @@ io.on('connection', (socket) => {
     const nameData = [];
     const scoreData = [];
     const returnData = [];
-    const keys = Object.keys(playerData[room]);
+    const keys = [...Object.keys(playerData[room])];
+
+    // remove hasStarted
+    keys.splice(0, 1);
 
     // place name and score data into respective arrays
     for (let i = 0; i < keys.length; i++) {
@@ -94,7 +102,7 @@ io.on('connection', (socket) => {
 
   // Main.js one-liners
   socket.on('increment-players', (room) => {
-    const players = (playerData[room]) ? Object.keys(playerData[room]).length : -1;
+    const players = (playerData[room]) ? (Object.keys(playerData[room]).length - 1) : -1;
 
     io.to(room).emit('update-players', players);
   });
@@ -106,8 +114,9 @@ io.on('connection', (socket) => {
     // create two new json objects to hold data
     const playerInfo = {};
 
-    // initialize pd[room] as a blank object
+    // initialize pd[room] as a blank object and initialize hasStarted
     playerData[room] = {};
+    playerData[room].hasStarted = false;
 
     playerInfo.nickname = nick;
     playerInfo.score = 0;
@@ -124,7 +133,10 @@ io.on('connection', (socket) => {
     const playerInfo = {};
     let doesExist = false;
     let nameDupe = false;
-    const playerIds = (playerData[room]) ? Object.keys(playerData[room]) : [];
+    const playerIds = (playerData[room]) ? [...Object.keys(playerData[room])] : [];
+
+    // remove hasStarted from playerIds
+    if (playerIds.length !== 0) playerIds.splice(0, 1);
 
     // fill json with data
     playerInfo.nickname = nick;
@@ -140,7 +152,7 @@ io.on('connection', (socket) => {
       }
     }
 
-    if (doesExist && !nameDupe && playerIds.length < 10) {
+    if (doesExist && !nameDupe && playerIds.length < 10 && !playerData[room].hasStarted) {
       socket.join(room);
       playerData[room][socket.id] = playerInfo;
       io.to(socket.id).emit('join-success', playerIds.length, room);
@@ -148,17 +160,19 @@ io.on('connection', (socket) => {
     } else if (!doesExist) io.to(socket.id).emit('error', 'Invalid room code. Please try again.');
     else if (nameDupe) io.to(socket.id).emit('error', 'Name is taken. Please enter another name.');
     else if (playerIds.length >= 10) io.to(socket.id).emit('error', 'Room is full! Please try again later.');
+    else if (playerData[room].hasStarted) io.to(socket.id).emit('error', 'Game has already started.');
     else io.to(socket.id).emit('error', 'Something went wrong. Please try again.');
   });
 
   // start game
-  socket.on('start', (room) => { io.to(room).emit('start-game'); });
+  socket.on('start', (room) => { playerData[room].hasStarted = true; io.to(room).emit('start-game'); });
 
   // sync scores between all clients in room
   socket.on('send-score', (room, newScore, player) => {
-    const keys = Object.keys(playerData[room]);
-    playerData[room][keys[player]].score = newScore;
+    const keys = [...Object.keys(playerData[room])];
+    keys.splice(0, 1); // remove hasStarted
 
+    playerData[room][keys[player]].score = newScore;
     io.to(room).emit('receive-score', newScore, player);
   });
 

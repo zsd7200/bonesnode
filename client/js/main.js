@@ -39,7 +39,6 @@ window.onload = () => {
     let messages = document.querySelector("#messages");
     let messageArrow = document.querySelector("#message-arrow");
     let messagesUL = document.querySelector("#messages-ul");
-    let chatInputContainer = document.querySelector("#chat-input-container");
     let chatInput = document.querySelector("#chat-input");
     
     /* MARK: - Dice Setup - */
@@ -111,10 +110,9 @@ window.onload = () => {
         document.body.classList.toggle("dark-body");
         rules.classList.toggle("dark-body");
         messages.classList.toggle("dark-body");
-        chatInputContainer.toggle("dark-body");
         
         // update scoreboard for dark mode
-        for(let i = 0; i < scoreboardTrs.length; i++) {          
+        for(let i = 0; i < scoreboardTrs.length; i++) {
             if(!(i % 2)) {
                 scoreboardTrs[i].style.backgroundColor = (darkMode) ? trBgD : trBgL;
             }
@@ -239,6 +237,12 @@ window.onload = () => {
             } else
                 errDisp(invalidNameMsg);
         };
+    };
+    
+    // click open button if enter is pressed  
+    hostNick.onkeyup = (e) => {
+        if(e.keyCode == 13)
+            openButton.click();
     };
         
     // host button--starts the multiplayer game

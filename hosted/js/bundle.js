@@ -721,7 +721,6 @@ window.onload = function () {
   var messages = document.querySelector("#messages");
   var messageArrow = document.querySelector("#message-arrow");
   var messagesUL = document.querySelector("#messages-ul");
-  var chatInputContainer = document.querySelector("#chat-input-container");
   var chatInput = document.querySelector("#chat-input");
   /* MARK: - Dice Setup - */
 
@@ -807,8 +806,7 @@ window.onload = function () {
 
     document.body.classList.toggle("dark-body");
     rules.classList.toggle("dark-body");
-    messages.classList.toggle("dark-body");
-    chatInputContainer.toggle("dark-body"); // update scoreboard for dark mode
+    messages.classList.toggle("dark-body"); // update scoreboard for dark mode
 
     for (var _i13 = 0; _i13 < scoreboardTrs.length; _i13++) {
       if (!(_i13 % 2)) {
@@ -936,6 +934,11 @@ window.onload = function () {
         });
       } else errDisp(invalidNameMsg);
     };
+  }; // click open button if enter is pressed  
+
+
+  hostNick.onkeyup = function (e) {
+    if (e.keyCode == 13) openButton.click();
   }; // host button--starts the multiplayer game
 
 
