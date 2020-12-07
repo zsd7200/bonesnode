@@ -896,13 +896,14 @@ window.onload = function () {
       if (name.length > 1) {
         // check and make sure there's enough characters and emit join
         if (joinIDval.length == 6) socket.emit('join', name, joinIDval);else errDisp(sixDigitMsg);
-        socket.on('join-success', function (pId, rm) {
+        socket.on('join-success', function (pId, rm, sec) {
           joinNick.disabled = true;
           joinID.disabled = true;
           joinButton.disabled = true;
           playerId = pId;
           currPlayer = playerId;
           room = rm;
+          secret = sec;
           fadeIn(chatButton);
           socket.emit('increment-players', room);
           errDisp(joinedMsg);
@@ -922,9 +923,10 @@ window.onload = function () {
 
         socket.emit('create', hostNick.value); // display room-id (called by emitting create) on-screen
 
-        socket.on('room-id', function (data) {
-          hostID.innerHTML = data;
-          room = data;
+        socket.on('room-id', function (id, sec) {
+          hostID.innerHTML = id;
+          room = id;
+          secret = sec;
           fadeIn(scoreboard);
           fadeIn(chatButton);
           openButton.disabled = true;
@@ -993,13 +995,14 @@ window.onload = function () {
       fadeIn(messageArrow);
       chatButton.classList.remove("red");
     }
-  }; // send message and reset value to empty
+  }; // send encrypted message and reset value to empty
 
 
   chatInput.onkeyup = function (e) {
     // keycode 13 is enter
     if (e.keyCode == 13 && chatInput.value != "") {
-      socket.emit('send-chat', room, chatInput.value);
+      var encMsg = CryptoJS.AES.encrypt(chatInput.value, secret).toString();
+      socket.emit('send-chat', room, encMsg);
       chatInput.value = "";
     }
   }; // on receiving a chat, show it in messages box
@@ -1029,9 +1032,9 @@ window.onload = function () {
     timeSp.classList.add("time"); // append to info li
 
     infoLi.appendChild(userSp);
-    infoLi.appendChild(timeSp); // fill message span and append
+    infoLi.appendChild(timeSp); // fill message span with decrypted message and append
 
-    msgSp.innerHTML = msg;
+    msgSp.innerHTML = CryptoJS.AES.decrypt(msg, secret).toString(CryptoJS.enc.Utf8);
     msgLi.appendChild(msgSp); // add classes for different backgrounds if numMessages is odd
 
     if (!(numMessages % 2)) {
@@ -1277,7 +1280,7 @@ var winnerIndex = -1;
 var isMultiplayer = false;
 var isFrozen = false;
 var numMessages = 0;
-var socket, room;
+var socket, room, secret;
 /* MARK: - Helper Functions - */
 // random int
 

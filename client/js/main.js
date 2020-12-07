@@ -195,13 +195,14 @@ window.onload = () => {
                 else
                     errDisp(sixDigitMsg);
                 
-                socket.on('join-success', (pId, rm) => {
+                socket.on('join-success', (pId, rm, sec) => {
                     joinNick.disabled = true;
                     joinID.disabled = true;
                     joinButton.disabled = true;
                     playerId = pId;
                     currPlayer = playerId;
                     room = rm;
+                    secret = sec;
                     fadeIn(chatButton);
                     socket.emit('increment-players', room);
                     errDisp(joinedMsg);
@@ -224,9 +225,10 @@ window.onload = () => {
                 socket.emit('create', hostNick.value);
                 
                 // display room-id (called by emitting create) on-screen
-                socket.on('room-id', (data) => {
-                    hostID.innerHTML = data;
-                    room = data;
+                socket.on('room-id', (id, sec) => {
+                    hostID.innerHTML = id;
+                    room = id;
+                    secret = sec;
                     fadeIn(scoreboard);
                     fadeIn(chatButton);
                     openButton.disabled = true;
@@ -308,11 +310,12 @@ window.onload = () => {
         }
     };
     
-    // send message and reset value to empty
+    // send encrypted message and reset value to empty
     chatInput.onkeyup = (e) => {
         // keycode 13 is enter
         if(e.keyCode == 13 && chatInput.value != "") {
-            socket.emit('send-chat', room, chatInput.value);
+            const encMsg = CryptoJS.AES.encrypt(chatInput.value, secret).toString();
+            socket.emit('send-chat', room, encMsg);
             chatInput.value = "";
         }
     };
@@ -346,8 +349,8 @@ window.onload = () => {
         infoLi.appendChild(userSp);
         infoLi.appendChild(timeSp);
         
-        // fill message span and append
-        msgSp.innerHTML = msg;
+        // fill message span with decrypted message and append
+        msgSp.innerHTML = CryptoJS.AES.decrypt(msg, secret).toString(CryptoJS.enc.Utf8);
         msgLi.appendChild(msgSp);
         
         // add classes for different backgrounds if numMessages is odd

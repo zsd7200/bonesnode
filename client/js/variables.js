@@ -113,7 +113,7 @@ let winnerIndex = -1;
 let isMultiplayer = false;
 let isFrozen = false;
 let numMessages = 0;
-let socket, room;
+let socket, room, secret;
 
 /* MARK: - Helper Functions - */
 // random int
